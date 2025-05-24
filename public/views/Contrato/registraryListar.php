@@ -1,35 +1,10 @@
 <?php
-// Funciones para obtener datos de contratos y beneficiarios
-function obtenerContratos($pdo) {
-    $stmt = $pdo->prepare("
-        SELECT c.*, 
-               CONCAT(b.apellidos, ', ', b.nombres) as beneficiario_nombre,
-               b.dni as beneficiario_dni
-        FROM contratos c 
-        INNER JOIN beneficiarios b ON c.idbeneficiario = b.idbeneficiario 
-        ORDER BY c.fechainicio DESC
-    ");
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Función para buscar beneficiario por DNI
-function buscarBeneficiarioPorDni($pdo, $dni) {
-    $stmt = $pdo->prepare("SELECT * FROM beneficiarios WHERE dni = ?");
-    $stmt->execute([$dni]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-// Función para verificar si un beneficiario tiene contratos activos
-function tieneContratosActivos($pdo, $idbeneficiario) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM contratos WHERE idbeneficiario = ? AND estado = 'ACT'");
-    $stmt->execute([$idbeneficiario]);
-    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $resultado['total'] > 0;
-}
-
-// Procesar búsqueda de beneficiario
+// IMPORTANTE: Este bloque debe ir AL PRINCIPIO del archivo, antes de cualquier HTML
+// Procesar búsqueda de beneficiario AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buscar_beneficiario'])) {
+    // Evitar que se genere cualquier HTML
+    ob_clean(); // Limpiar cualquier salida previa
+    
     $response = array();
     
     try {
@@ -65,9 +40,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buscar_beneficiario']
         );
     }
     
-    header('Content-Type: application/json');
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode($response);
-    exit;
+    exit(); // IMPORTANTE: Detener la ejecución aquí
+}
+
+// Funciones para obtener datos de contratos y beneficiarios
+function obtenerContratos($pdo) {
+    $stmt = $pdo->prepare("
+        SELECT c.*, 
+               CONCAT(b.apellidos, ', ', b.nombres) as beneficiario_nombre,
+               b.dni as beneficiario_dni
+        FROM contratos c 
+        INNER JOIN beneficiarios b ON c.idbeneficiario = b.idbeneficiario 
+        ORDER BY c.fechainicio DESC
+    ");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Función para buscar beneficiario por DNI
+function buscarBeneficiarioPorDni($pdo, $dni) {
+    $stmt = $pdo->prepare("SELECT * FROM beneficiarios WHERE dni = ?");
+    $stmt->execute([$dni]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Función para verificar si un beneficiario tiene contratos activos
+function tieneContratosActivos($pdo, $idbeneficiario) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM contratos WHERE idbeneficiario = ? AND estado = 'ACT'");
+    $stmt->execute([$idbeneficiario]);
+    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $resultado['total'] > 0;
 }
 
 // Procesar el registro de nuevo contrato
@@ -872,7 +876,7 @@ function buscarBeneficiario() {
     formData.append('buscar_beneficiario', '1');
     formData.append('dni_buscar', dni);
     
-    fetch('', {
+    fetch('?seccion=contratos', {
         method: 'POST',
         body: formData
     })
