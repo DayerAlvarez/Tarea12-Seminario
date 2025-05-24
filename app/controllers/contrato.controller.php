@@ -89,6 +89,39 @@ class ContratoController {
         }
     }
     
+    // Buscar beneficiario por DNI para el formulario
+    public function buscarBeneficiarioPorDni($dni) {
+        try {
+            if (!$dni) {
+                throw new Exception("DNI requerido");
+            }
+            
+            if (!$this->beneficiarioModel->validarDni($dni)) {
+                throw new Exception("Formato de DNI inválido. Debe tener 8 dígitos");
+            }
+            
+            $beneficiario = $this->beneficiarioModel->obtenerPorDni($dni);
+            
+            if (!$beneficiario) {
+                throw new Exception("No se encontró beneficiario con el DNI: " . $dni);
+            }
+            
+            // Formatear respuesta para el formulario
+            $beneficiarioFormateado = [
+                'idbeneficiario' => $beneficiario['idbeneficiario'],
+                'nombre_completo' => $beneficiario['apellidos'] . ', ' . $beneficiario['nombres'],
+                'dni' => $beneficiario['dni'],
+                'telefono' => $beneficiario['telefono'],
+                'direccion' => $beneficiario['direccion']
+            ];
+            
+            $this->enviarRespuesta(true, "Beneficiario encontrado", $beneficiarioFormateado);
+            
+        } catch(Exception $e) {
+            $this->enviarRespuesta(false, $e->getMessage());
+        }
+    }
+    
     // Crear nuevo contrato
     public function crear() {
         try {
@@ -267,6 +300,8 @@ class ContratoController {
                         $this->obtenerResumen($id);
                     } elseif ($accion === 'beneficiario' && $id) {
                         $this->obtenerPorBeneficiario($id);
+                    } elseif ($accion === 'buscar-beneficiario' && $id) {
+                        $this->buscarBeneficiarioPorDni($id);
                     } elseif ($id) {
                         $this->obtener($id);
                     } else {
