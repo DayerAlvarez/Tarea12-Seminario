@@ -1,6 +1,6 @@
 <?php
-require_once '../models/Contrato.php';
-require_once '../models/Beneficiario.php';
+require_once 'app/models/Contrato.php';
+require_once 'app/models/Beneficiario.php';
 
 class ContratoController {
     private $contratoModel;
@@ -11,81 +11,175 @@ class ContratoController {
         $this->beneficiarioModel = new Beneficiario();
     }
     
-    // Listar todos los contratos
-    public function listar() {
+    // Método específico para la vista - muestra todos los contratos
+    public function obtenerTodosParaVista() {
         try {
             $contratos = $this->contratoModel->obtenerTodos();
-            $this->enviarRespuesta(true, "Contratos obtenidos correctamente", $contratos);
+            return ['exito' => true, 'datos' => $contratos];
         } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+            throw new Exception("Error al obtener contratos: " . $e->getMessage());
         }
     }
     
-    // Listar contratos activos
-    public function listarActivos() {
+    // Crear contrato desde formulario (para vista)
+    public function crearDesdeFormulario($datos) {
         try {
-            $contratos = $this->contratoModel->obtenerActivos();
-            $this->enviarRespuesta(true, "Contratos activos obtenidos correctamente", $contratos);
+            // Validar datos requeridos
+            $this->validarDatosRequeridos($datos, [
+                'idbeneficiario', 'monto', 'interes', 'fechainicio', 'diapago', 'numcuotas'
+            ]);
+            
+            // Validar datos usando el modelo
+            $errores = $this->contratoModel->validarDatos(
+                $datos['monto'],
+                $datos['interes'],
+                $datos['fechainicio'],
+                $datos['diapago'],
+                $datos['numcuotas']
+            );
+            
+            if (!empty($errores)) {
+                throw new Exception(implode(', ', $errores));
+            }
+            
+            // Validar que el beneficiario existe
+            if (!$this->beneficiarioModel->obtenerPorId($datos['idbeneficiario'])) {
+                throw new Exception("El beneficiario especificado no existe");
+            }
+            
+            // Validar que la fecha de inicio no sea anterior a hoy
+            if (strtotime($datos['fechainicio']) < strtotime(date('Y-m-d'))) {
+                throw new Exception("La fecha de inicio no puede ser anterior a hoy");
+            }
+            
+            // Verificar si el beneficiario ya tiene contratos activos
+            $contratosActivos = $this->contratoModel->obtenerActivosPorBeneficiario($datos['idbeneficiario']);
+            if (count($contratosActivos) > 0) {
+                throw new Exception("El beneficiario ya tiene un contrato activo. Debe finalizar el contrato actual antes de crear uno nuevo.");
+            }
+            
+            $id = $this->contratoModel->crear(
+                $datos['idbeneficiario'],
+                $datos['monto'],
+                $datos['interes'],
+                $datos['fechainicio'],
+                $datos['diapago'],
+                $datos['numcuotas']
+            );
+            
+            $contrato = $this->contratoModel->obtenerPorId($id);
+            return ['exito' => true, 'mensaje' => "Contrato creado correctamente", 'datos' => $contrato];
+            
         } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
     
-    // Obtener contrato por ID
-    public function obtener($id) {
+    // Actualizar contrato desde formulario (para vista)
+    public function actualizarDesdeFormulario($datos) {
+        try {
+            if (!isset($datos['idcontrato']) || !is_numeric($datos['idcontrato'])) {
+                throw new Exception("ID de contrato inválido");
+            }
+            
+            $id = $datos['idcontrato'];
+            
+            // Verificar que el contrato existe
+            $contratoExistente = $this->contratoModel->obtenerPorId($id);
+            if (!$contratoExistente) {
+                throw new Exception("Contrato no encontrado");
+            }
+            
+            // No permitir actualizar contratos finalizados
+            if ($contratoExistente['estado'] === 'FIN') {
+                throw new Exception("No se puede actualizar un contrato finalizado");
+            }
+            
+            // Validar datos requeridos
+            $this->validarDatosRequeridos($datos, [
+                'idbeneficiario', 'monto', 'interes', 'fechainicio', 'diapago', 'numcuotas'
+            ]);
+            
+            // Validar datos usando el modelo
+            $errores = $this->contratoModel->validarDatos(
+                $datos['monto'],
+                $datos['interes'],
+                $datos['fechainicio'],
+                $datos['diapago'],
+                $datos['numcuotas']
+            );
+            
+            if (!empty($errores)) {
+                throw new Exception(implode(', ', $errores));
+            }
+            
+            // Validar que el beneficiario existe
+            if (!$this->beneficiarioModel->obtenerPorId($datos['idbeneficiario'])) {
+                throw new Exception("El beneficiario especificado no existe");
+            }
+            
+            $this->contratoModel->actualizar(
+                $id,
+                $datos['idbeneficiario'],
+                $datos['monto'],
+                $datos['interes'],
+                $datos['fechainicio'],
+                $datos['diapago'],
+                $datos['numcuotas']
+            );
+            
+            $contrato = $this->contratoModel->obtenerPorId($id);
+            return ['exito' => true, 'mensaje' => "Contrato actualizado correctamente", 'datos' => $contrato];
+            
+        } catch(Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
+    
+    // Finalizar contrato (para vista)
+    public function finalizar($id) {
         try {
             if (!$id || !is_numeric($id)) {
                 throw new Exception("ID de contrato inválido");
             }
             
+            // Verificar que el contrato existe
             $contrato = $this->contratoModel->obtenerPorId($id);
-            
             if (!$contrato) {
                 throw new Exception("Contrato no encontrado");
             }
             
-            $this->enviarRespuesta(true, "Contrato obtenido correctamente", $contrato);
+            // Verificar que está activo
+            if ($contrato['estado'] === 'FIN') {
+                throw new Exception("El contrato ya está finalizado");
+            }
+            
+            $this->contratoModel->finalizar($id);
+            
+            return ['exito' => true, 'mensaje' => "Contrato finalizado correctamente"];
+            
         } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
     
-    // Obtener resumen del contrato
-    public function obtenerResumen($id) {
+    // Eliminar contrato (para vista)
+    public function eliminar($id) {
         try {
             if (!$id || !is_numeric($id)) {
                 throw new Exception("ID de contrato inválido");
             }
             
-            $resumen = $this->contratoModel->obtenerResumen($id);
-            
-            if (!$resumen) {
+            // Verificar que el contrato existe
+            if (!$this->contratoModel->obtenerPorId($id)) {
                 throw new Exception("Contrato no encontrado");
             }
             
-            $this->enviarRespuesta(true, "Resumen obtenido correctamente", $resumen);
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
-        }
-    }
-    
-    // Obtener contratos por beneficiario
-    public function obtenerPorBeneficiario($idBeneficiario) {
-        try {
-            if (!$idBeneficiario || !is_numeric($idBeneficiario)) {
-                throw new Exception("ID de beneficiario inválido");
-            }
-            
-            // Verificar que el beneficiario existe
-            if (!$this->beneficiarioModel->obtenerPorId($idBeneficiario)) {
-                throw new Exception("Beneficiario no encontrado");
-            }
-            
-            $contratos = $this->contratoModel->obtenerPorBeneficiario($idBeneficiario);
-            $this->enviarRespuesta(true, "Contratos del beneficiario obtenidos correctamente", $contratos);
+            $this->contratoModel->eliminar($id);
+            return ['exito' => true, 'mensaje' => "Contrato eliminado correctamente"];
             
         } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
     
@@ -106,6 +200,10 @@ class ContratoController {
                 throw new Exception("No se encontró beneficiario con el DNI: " . $dni);
             }
             
+            // Verificar si tiene contratos activos
+            $contratosActivos = $this->contratoModel->obtenerActivosPorBeneficiario($beneficiario['idbeneficiario']);
+            $tieneContratosActivos = count($contratosActivos) > 0;
+            
             // Formatear respuesta para el formulario
             $beneficiarioFormateado = [
                 'idbeneficiario' => $beneficiario['idbeneficiario'],
@@ -115,14 +213,105 @@ class ContratoController {
                 'direccion' => $beneficiario['direccion']
             ];
             
-            $this->enviarRespuesta(true, "Beneficiario encontrado", $beneficiarioFormateado);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => true, 
+                'mensaje' => "Beneficiario encontrado",
+                'datos' => $beneficiarioFormateado,
+                'tieneContratosActivos' => $tieneContratosActivos
+            ]);
+            
+            return true;
+            
+        } catch(Exception $e) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => false,
+                'mensaje' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+    
+    // API REST - Listar todos los contratos
+    public function listar() {
+        try {
+            $contratos = $this->contratoModel->obtenerTodos();
+            $this->enviarRespuesta(true, "Contratos obtenidos correctamente", $contratos);
+        } catch(Exception $e) {
+            $this->enviarRespuesta(false, $e->getMessage());
+        }
+    }
+    
+    // API REST - Listar contratos activos
+    public function listarActivos() {
+        try {
+            $contratos = $this->contratoModel->obtenerActivos();
+            $this->enviarRespuesta(true, "Contratos activos obtenidos correctamente", $contratos);
+        } catch(Exception $e) {
+            $this->enviarRespuesta(false, $e->getMessage());
+        }
+    }
+    
+    // API REST - Obtener contrato por ID
+    public function obtener($id) {
+        try {
+            if (!$id || !is_numeric($id)) {
+                throw new Exception("ID de contrato inválido");
+            }
+            
+            $contrato = $this->contratoModel->obtenerPorId($id);
+            
+            if (!$contrato) {
+                throw new Exception("Contrato no encontrado");
+            }
+            
+            $this->enviarRespuesta(true, "Contrato obtenido correctamente", $contrato);
+        } catch(Exception $e) {
+            $this->enviarRespuesta(false, $e->getMessage());
+        }
+    }
+    
+    // API REST - Obtener resumen del contrato
+    public function obtenerResumen($id) {
+        try {
+            if (!$id || !is_numeric($id)) {
+                throw new Exception("ID de contrato inválido");
+            }
+            
+            $resumen = $this->contratoModel->obtenerResumen($id);
+            
+            if (!$resumen) {
+                throw new Exception("Contrato no encontrado");
+            }
+            
+            $this->enviarRespuesta(true, "Resumen obtenido correctamente", $resumen);
+        } catch(Exception $e) {
+            $this->enviarRespuesta(false, $e->getMessage());
+        }
+    }
+    
+    // API REST - Obtener contratos por beneficiario
+    public function obtenerPorBeneficiario($idBeneficiario) {
+        try {
+            if (!$idBeneficiario || !is_numeric($idBeneficiario)) {
+                throw new Exception("ID de beneficiario inválido");
+            }
+            
+            // Verificar que el beneficiario existe
+            if (!$this->beneficiarioModel->obtenerPorId($idBeneficiario)) {
+                throw new Exception("Beneficiario no encontrado");
+            }
+            
+            $contratos = $this->contratoModel->obtenerPorBeneficiario($idBeneficiario);
+            $this->enviarRespuesta(true, "Contratos del beneficiario obtenidos correctamente", $contratos);
             
         } catch(Exception $e) {
             $this->enviarRespuesta(false, $e->getMessage());
         }
     }
     
-    // Crear nuevo contrato
+    // API REST - Crear nuevo contrato
     public function crear() {
         try {
             $datos = $this->obtenerDatosPost();
@@ -172,7 +361,7 @@ class ContratoController {
         }
     }
     
-    // Actualizar contrato
+    // API REST - Actualizar contrato
     public function actualizar($id) {
         try {
             if (!$id || !is_numeric($id)) {
@@ -233,8 +422,8 @@ class ContratoController {
         }
     }
     
-    // Finalizar contrato
-    public function finalizar($id) {
+    // API REST - Finalizar contrato
+    public function finalizarRest($id) {
         try {
             if (!$id || !is_numeric($id)) {
                 throw new Exception("ID de contrato inválido");
@@ -261,8 +450,8 @@ class ContratoController {
         }
     }
     
-    // Eliminar contrato
-    public function eliminar($id) {
+    // API REST - Eliminar contrato
+    public function eliminarRest($id) {
         try {
             if (!$id || !is_numeric($id)) {
                 throw new Exception("ID de contrato inválido");
@@ -281,7 +470,7 @@ class ContratoController {
         }
     }
     
-    // Procesar las solicitudes HTTP
+    // Procesar las solicitudes HTTP para API REST
     public function procesarSolicitud() {
         $metodo = $_SERVER['REQUEST_METHOD'];
         $uri = $_SERVER['REQUEST_URI'];
@@ -319,7 +508,7 @@ class ContratoController {
                     }
                     
                     if ($accion === 'finalizar') {
-                        $this->finalizar($id);
+                        $this->finalizarRest($id);
                     } else {
                         $this->actualizar($id);
                     }
@@ -329,7 +518,7 @@ class ContratoController {
                     if (!$id) {
                         throw new Exception("ID requerido para eliminar");
                     }
-                    $this->eliminar($id);
+                    $this->eliminarRest($id);
                     break;
                     
                 default:
@@ -384,8 +573,9 @@ class ContratoController {
     }
 }
 
-// Uso del controlador
-if (basename($_SERVER['PHP_SELF']) === 'contrato.controller.php') {
+// Uso del controlador para API REST
+if (basename($_SERVER['PHP_SELF']) === 'contrato.controller.php' && 
+    strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
     $controller = new ContratoController();
     $controller->procesarSolicitud();
 }

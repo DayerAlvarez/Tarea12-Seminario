@@ -288,5 +288,21 @@ class Contrato {
         
         return $errores;
     }
+    // Método adicional para comprobar si un beneficiario tiene contratos activos
+    public function obtenerActivosPorBeneficiario($idBeneficiario) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM contratos 
+                WHERE idbeneficiario = :idbeneficiario 
+                AND estado = 'ACT'
+                ORDER BY fechainicio DESC
+            ");
+            $stmt->bindParam(':idbeneficiario', $idBeneficiario, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch(PDOException $e) {
+            throw new Exception("Error al obtener contratos activos del beneficiario: " . $e->getMessage());
+        }
+    }
 }
 ?>

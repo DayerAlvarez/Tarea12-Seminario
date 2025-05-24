@@ -1,15 +1,125 @@
 <?php
+// Iniciar la sesión para poder mostrar mensajes entre redirecciones
+session_start();
+
 // Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'prestamos';
-$username = 'root';
-$password = '';
+require_once 'app/models/Conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conexion = new Conexion();
+    $pdo = $conexion->getConnection();
 } catch(PDOException $e) {
     die("Error de conexión: " . $e->getMessage());
+}
+
+// Procesar acciones para controladores si existen
+if (isset($_GET['action'])) {
+    $seccion = isset($_GET['seccion']) ? $_GET['seccion'] : 'beneficiarios';
+    $accion = $_GET['action'];
+    
+    // Redirigir la acción al controlador apropiado
+    switch ($seccion) {
+        case 'beneficiarios':
+            require_once 'app/controllers/beneficiario.controller.php';
+            $controller = new BeneficiarioController();
+            
+            if ($accion === 'crear') {
+                try {
+                    $respuesta = $controller->crearDesdeFormulario($_POST);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'actualizar') {
+                try {
+                    $respuesta = $controller->actualizarDesdeFormulario($_POST);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'eliminar' && isset($_GET['id'])) {
+                try {
+                    $respuesta = $controller->eliminar($_GET['id']);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            }
+            break;
+            
+        case 'contratos':
+            require_once 'app/controllers/contrato.controller.php';
+            $controller = new ContratoController();
+            
+            if ($accion === 'crear') {
+                try {
+                    $respuesta = $controller->crearDesdeFormulario($_POST);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'actualizar') {
+                try {
+                    $respuesta = $controller->actualizarDesdeFormulario($_POST);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'finalizar' && isset($_GET['id'])) {
+                try {
+                    $respuesta = $controller->finalizar($_GET['id']);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'eliminar' && isset($_GET['id'])) {
+                try {
+                    $respuesta = $controller->eliminar($_GET['id']);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'buscar_beneficiario' && isset($_GET['dni'])) {
+                // Endpoint para buscar beneficiario (AJAX)
+                try {
+                    $resultado = $controller->buscarBeneficiarioPorDni($_GET['dni']);
+                    // No hacer redirect ya que es una llamada AJAX
+                    exit;
+                } catch (Exception $e) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+                    exit;
+                }
+            }
+            break;
+            
+        case 'pagos':
+            require_once 'app/controllers/pago.controller.php';
+            $controller = new PagoController();
+            
+            if ($accion === 'registrar') {
+                try {
+                    $respuesta = $controller->registrarDesdeFormulario($_POST);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            } else if ($accion === 'anular' && isset($_GET['id'])) {
+                try {
+                    $respuesta = $controller->anular($_GET['id']);
+                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                } catch (Exception $e) {
+                    $_SESSION['mensaje_error'] = $e->getMessage();
+                }
+            }
+            break;
+    }
+    
+    // Redirigir a la sección correspondiente (excepto si ya se procesó como AJAX)
+    if (!isset($resultado)) {
+        header('Location: ?seccion=' . $seccion);
+        exit;
+    }
 }
 
 // Determinar qué sección mostrar
@@ -22,104 +132,8 @@ $seccion = isset($_GET['seccion']) ? $_GET['seccion'] : 'beneficiarios';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Préstamos</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-
-        .nav-tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 3px solid #e9ecef;
-        }
-
-        .nav-tab {
-            flex: 1;
-            text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            color: #495057;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1em;
-            transition: all 0.3s ease;
-            border-right: 1px solid #dee2e6;
-            position: relative;
-        }
-
-        .nav-tab:last-child {
-            border-right: none;
-        }
-
-        .nav-tab:hover {
-            background: #e9ecef;
-            color: #2c3e50;
-            transform: translateY(-2px);
-        }
-
-        .nav-tab.active {
-            background: white;
-            color: #2c3e50;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .nav-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .content {
-            padding: 30px;
-            min-height: 500px;
-        }
-
-        @media (max-width: 768px) {
-            .nav-tabs {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <!-- Estilos principales -->
+    <link rel="stylesheet" href="public/css/main.css">
 </head>
 <body>
     <div class="container">
@@ -154,7 +168,7 @@ $seccion = isset($_GET['seccion']) ? $_GET['seccion'] : 'beneficiarios';
                     include 'public/views/Pago/listar.php';
                     break;
                 default:
-                    include 'views/Beneficiario/registraryListar.php';
+                    include 'public/views/Beneficiario/registraryListar.php';
                     break;
             }
             ?>

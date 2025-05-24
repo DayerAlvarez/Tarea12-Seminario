@@ -1,0 +1,220 @@
+/* Estilos específicos para el módulo de Pagos */
+
+.btn-registrar {
+    background: linear-gradient(135deg, #6f42c1, #007bff);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+}
+
+.btn-registrar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+}
+
+.payment-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: white;
+}
+
+.status-paid {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-pay {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+}
+
+.btn-pay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+
+.payment-date {
+    font-weight: 600;
+    color: #6f42c1;
+}
+
+.payment-amount {
+    font-weight: 600;
+    color: #28a745;
+}
+
+.calendar-view {
+    margin-top: 30px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-title {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-nav {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-nav:hover {
+    background: #e9ecef;
+}
+
+.upcoming-payments {
+    margin-top: 30px;
+}
+
+.upcoming-title {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f3f4;
+    padding-bottom: 10px;
+}
+
+.empty-payments {
+    background: #f8f9fa;
+    padding: 30px;
+    text-align: center;
+    border-radius: 10px;
+    color: #6c757d;
+}
+
+.empty-payments i {
+    font-size: 3em;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* Modal específico para pagos */
+.pago-modal .modal-header {
+    background: linear-gradient(135deg, #6f42c1, #007bff);
+}
+
+.pago-modal .btn-primary {
+    background: linear-gradient(135deg, #6f42c1, #007bff);
+}
+
+.pago-modal .btn-primary:hover {
+    box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+}
+
+/* Estilos para visualización de historial */
+.payment-history {
+    margin-top: 30px;
+}
+
+.history-title {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f3f4;
+    padding-bottom: 10px;
+}
+
+.payment-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.payment-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.payment-info {
+    flex: 1;
+}
+
+.payment-beneficiary {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.payment-details {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.payment-meta {
+    text-align: right;
+}
+
+.payment-large-amount {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .payment-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .payment-meta {
+        text-align: center;
+        margin-top: 15px;
+    }
+}
