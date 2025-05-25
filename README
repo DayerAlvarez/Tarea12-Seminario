@@ -1,8 +1,14 @@
-# Sistema de Préstamos Web
+# 💰 Sistema de Préstamos Web
 
-Sistema para la gestión de préstamos que permite administrar beneficiarios, contratos y pagos de cuotas.
+---
 
-## Estructura del Proyecto
+## 📋 Descripción
+
+Sistema completo para la gestión de préstamos que permite administrar beneficiarios, contratos y pagos de cuotas de manera eficiente.
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```
 prestamos-web/
@@ -41,75 +47,146 @@ prestamos-web/
 └── README.md
 ```
 
-## Descripción de los componentes
+---
 
-### Base de Datos
+## 🗄️ Base de Datos
 
 La base de datos `prestamos` contiene las siguientes tablas:
 
-- **beneficiarios**: Almacena información de los clientes (apellidos, nombres, DNI, teléfono, dirección).
-- **contratos**: Guarda los contratos de préstamos (beneficiario, monto, interés, fechas, estado).
-- **pagos**: Registra las cuotas y pagos realizados (contrato, número de cuota, monto, penalidad).
+| Tabla | Descripción |
+|-------|-------------|
+| **beneficiarios** | Información de clientes (apellidos, nombres, DNI, teléfono, dirección) |
+| **contratos** | Datos de préstamos (beneficiario, monto, interés, fechas, estado) |
+| **pagos** | Registro de cuotas y pagos (contrato, número de cuota, monto, penalidad) |
 
-### Modelos (app/models/)
+---
 
-- **Conexion.php**: Establece la conexión PDO a la base de datos MySQL.
-- **Beneficiario.php**: Gestiona las operaciones CRUD para beneficiarios. Incluye validaciones para DNI (8 dígitos) y teléfono (9 dígitos).
-- **Contrato.php**: Maneja los contratos de préstamo, con funciones para crear, actualizar, finalizar contratos y generar cronogramas de pago.
-- **Pago.php**: Administra los pagos de cuotas, con cálculo de penalidades por pagos tardíos (10%).
+## 🧩 Componentes del Sistema
 
-### Controladores (app/controllers/)
+### 📊 Modelos (`app/models/`)
 
-- **beneficiario.controller.php**: Controla las operaciones relacionadas con beneficiarios, procesa formularios y maneja peticiones AJAX.
-- **contrato.controller.php**: Gestiona la creación y administración de contratos, incluyendo la generación de cronogramas de pago.
-- **pago.controller.php**: Controla el registro de pagos de cuotas, con cálculo de penalidades automático.
+* **✨ Conexion.php**
+  * Establece la conexión PDO a la base de datos MySQL
+  * Gestiona errores de conexión
 
-### Vistas (public/views/)
+* **👤 Beneficiario.php**
+  * Operaciones CRUD para beneficiarios
+  * Validaciones para DNI (8 dígitos) y teléfono (9 dígitos)
+  * Búsqueda de beneficiarios por diferentes criterios
 
-- **Beneficiario/registraryListar.php**: Muestra el formulario de registro y listado de beneficiarios.
-- **Contrato/registraryListar.php**: Presenta el formulario para crear contratos y listar los existentes.
-- **Pago/listar.php**: Ofrece la interfaz para registrar pagos y visualizar el historial.
+* **📝 Contrato.php**
+  * Creación y gestión de contratos de préstamo
+  * Cálculo automático de cuotas con sistema de amortización
+  * Generación de cronogramas de pago
+  * Control de contratos activos por beneficiario
 
-### Estilos CSS (public/css/)
+* **💳 Pago.php**
+  * Registro de pagos de cuotas
+  * Cálculo automático de penalidades (10%)
+  * Obtención de cuotas pendientes y pagadas
 
-- **main.css**: Estilos generales del sistema, incluyendo tablas, formularios y componentes comunes.
-- **beneficiario.css**: Estilos específicos para la sección de beneficiarios.
-- **contrato.css**: Estilos para contratos, incluyendo el modal de cronograma.
-- **pago.css**: Estilos para la sección de pagos.
+### 🎮 Controladores (`app/controllers/`)
 
-### JavaScript (public/js/)
+* **👥 beneficiario.controller.php**
+  * Procesa formularios de beneficiarios
+  * Valida datos de entrada
+  * Maneja peticiones AJAX para búsquedas
 
-- **beneficiario.js**: Funcionalidades cliente para la gestión de beneficiarios.
-- **contrato.js**: Scripts para contratos, incluyendo búsqueda de beneficiarios, cálculo de préstamos y visualización de cronogramas.
-- **pago.js**: Código para el registro de pagos y búsqueda de contratos por DNI.
+* **📋 contrato.controller.php**
+  * Gestiona creación y finalización de contratos
+  * Genera cronogramas de pago
+  * Busca beneficiarios por DNI para asociar contratos
 
-### Punto de entrada (index.php)
+* **💲 pago.controller.php**
+  * Registra pagos con cálculo de penalidades
+  * Busca contratos activos por DNI
+  * Obtiene cuotas pendientes para pagos
 
-Actúa como controlador frontal, procesando las solicitudes y cargando los controladores según la sección seleccionada (beneficiarios, contratos o pagos).
+### 🖥️ Vistas (`public/views/`)
 
-## Funcionalidades
+* **Beneficiario/registraryListar.php**
+  * Formulario de registro de beneficiarios
+  * Listado de beneficiarios existentes
+  * Modal para edición de datos
 
-### Módulo de Beneficiarios
-- Registro de beneficiarios con validación de DNI y teléfono
-- Listado de beneficiarios existentes
-- Edición y eliminación de beneficiarios
+* **Contrato/registraryListar.php**
+  * Formulario para crear contratos
+  * Listado de contratos existentes
+  * Modal para visualizar cronograma de pagos
 
-### Módulo de Contratos
-- Creación de contratos asociados a beneficiarios
-- Configuración de montos, intereses, plazos y fechas de pago
-- Visualización de cronograma de pagos
-- Control de un contrato activo por beneficiario
+* **Pago/listar.php**
+  * Interfaz para registrar pagos
+  * Historial de pagos realizados
+  * Búsqueda de contratos por DNI
 
-### Módulo de Pagos
-- Registro de pagos de cuotas
-- Aplicación automática de penalidades por pagos tardíos
-- Soporte para diferentes medios de pago (efectivo, depósito)
-- Historial de pagos realizados
+### 🎨 Estilos CSS (`public/css/`)
 
-## Características técnicas
+* **main.css**: Estilos globales del sistema (tablas, formularios, modales)
+* **beneficiario.css**: Estilos específicos para sección de beneficiarios
+* **contrato.css**: Estilos para contratos y cronogramas
+* **pago.css**: Estilos para la sección de pagos
 
-- Implementación del patrón MVC
-- Validación de datos en servidor y cliente
-- Conexión a base de datos mediante PDO
-- Interfaz responsiva con CSS personalizado
-- Interacciones dinámicas con JavaScript
+### 📱 JavaScript (`public/js/`)
+
+* **beneficiario.js**: Validación de formularios y manejo de modales
+* **contrato.js**: Búsqueda de beneficiarios, cálculo de préstamos y visualización de cronogramas
+* **pago.js**: Registro de pagos y búsqueda de contratos por DNI
+
+### 🚪 Punto de entrada (`index.php`)
+
+* Actúa como controlador frontal
+* Procesa solicitudes y redirecciona según la sección seleccionada
+* Carga los controladores correspondientes
+* Muestra la interfaz principal del sistema
+
+---
+
+## ⚙️ Funcionalidades
+
+### 👥 Módulo de Beneficiarios
+
+* ✅ Registro de beneficiarios con validación de DNI y teléfono
+* ✅ Listado de beneficiarios existentes
+* ✅ Edición y eliminación de beneficiarios
+* ✅ Validación en tiempo real de datos de entrada
+
+### 📝 Módulo de Contratos
+
+* ✅ Creación de contratos asociados a beneficiarios
+* ✅ Configuración de montos, intereses, plazos y fechas de pago
+* ✅ Visualización de cronograma de pagos
+* ✅ Control de un contrato activo por beneficiario
+* ✅ Cálculo automático de cuotas mensuales
+
+### 💰 Módulo de Pagos
+
+* ✅ Registro de pagos de cuotas
+* ✅ Aplicación automática de penalidades por pagos tardíos
+* ✅ Soporte para diferentes medios de pago (efectivo, depósito)
+* ✅ Historial de pagos realizados
+
+---
+
+## 🛠️ Características técnicas
+
+* ✅ Implementación del patrón MVC
+* ✅ Validación de datos en servidor y cliente
+* ✅ Conexión a base de datos mediante PDO
+* ✅ Interfaz responsiva con CSS personalizado
+* ✅ Interacciones dinámicas con JavaScript
+* ✅ Protección contra SQL Injection
+* ✅ Manejo de errores y excepciones
+
+---
+
+## 📋 Reglas de negocio implementadas
+
+* Un beneficiario solo puede tener un contrato activo a la vez
+* Las penalidades por pago tardío son del 10% del valor de la cuota
+* No se pueden eliminar beneficiarios que tengan contratos asociados
+* No se pueden eliminar contratos que tengan pagos registrados
+* Cada cuota debe pagarse completa (no se permiten pagos parciales)
+
+---
+
+⭐ Desarrollado para ofrecer una solución integral a la gestión de préstamos ⭐
