@@ -106,13 +106,21 @@ body {
     font-weight: 700;
 }
 
+/* Contenedor para tablas sin desplazamiento horizontal */
+.table-container {
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    background: white;
+}
+
+/* Estilos mejorados para las tablas */
 .data-table {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    table-layout: fixed;
 }
 
 .data-table th {
@@ -130,6 +138,88 @@ body {
     padding: 15px;
     border-bottom: 1px solid #f1f3f4;
     color: #495057;
+    vertical-align: middle;
+}
+
+/* Columnas con anchos específicos */
+.data-table .id-col {
+    width: 5%;
+    text-align: center;
+}
+
+.data-table .beneficiario-col {
+    width: 18%;
+}
+
+.data-table .dni-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .contrato-col {
+    width: 6%;
+    text-align: center;
+}
+
+.data-table .monto-col,
+.data-table .total-col {
+    width: 9%;
+    text-align: right;
+}
+
+.data-table .interes-col {
+    width: 7%;
+    text-align: center;
+}
+
+.data-table .fecha-col {
+    width: 9%;
+    text-align: center;
+}
+
+.data-table .dia-col {
+    width: 6%;
+    text-align: center;
+}
+
+.data-table .cuota-col,
+.data-table .cuotas-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .penalidad-col {
+    width: 9%;
+    text-align: right;
+}
+
+.data-table .estado-col {
+    width: 7%;
+    text-align: center;
+}
+
+.data-table .medio-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .acciones-col {
+    width: 10%;
+    text-align: center;
+}
+
+/* Manejo de texto largo en celdas */
+.data-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Estilos para valores monetarios */
+.currency {
+    white-space: nowrap;
+    text-align: right;
+    font-weight: 600;
 }
 
 .data-table tr:hover {
@@ -153,6 +243,37 @@ body {
     font-size: 3em;
     margin-bottom: 20px;
     opacity: 0.5;
+}
+
+/* Estilos para las insignias (badges) */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.badge-active {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.badge-finished {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.badge-efectivo {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.badge-deposito {
+    background: linear-gradient(135deg, #17a2b8, #0097e6);
+    color: white;
 }
 
 /* Modal Styles */
@@ -287,6 +408,26 @@ body {
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;
     color: #721c24;
+}
+
+/* Botón para acciones */
+.btn-action {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(111, 66, 193, 0.3);
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(111, 66, 193, 0.4);
 }
 
 @media (max-width: 768px) {

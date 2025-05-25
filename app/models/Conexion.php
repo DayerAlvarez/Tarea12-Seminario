@@ -8,6 +8,9 @@ class Conexion {
     
     public function __construct() {
         try {
+            // Establecer zona horaria para Perú
+            date_default_timezone_set('America/Lima');
+            
             $this->pdo = new PDO(
                 "mysql:host={$this->host};dbname={$this->dbname};charset=utf8", 
                 $this->username, 

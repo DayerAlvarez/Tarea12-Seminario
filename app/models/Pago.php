@@ -13,7 +13,7 @@ class Pago {
     public function obtenerPagosRealizados() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT p.*, c.idcontrato, c.monto as monto_contrato, c.fechainicio,
+                SELECT p.*, c.idcontrato, c.monto as monto_contrato, c.fechainicio, c.numcuotas,
                        CONCAT(b.apellidos, ', ', b.nombres) as beneficiario_nombre,
                        b.dni as beneficiario_dni
                 FROM pagos p 
@@ -67,6 +67,8 @@ class Pago {
     // Registrar pago
     public function registrarPago($idPago, $penalidad, $medio) {
         try {
+            // Establecer zona horaria a Perú
+            date_default_timezone_set('America/Lima');
             $fechaActual = date('Y-m-d H:i:s');
             
             $stmt = $this->pdo->prepare("

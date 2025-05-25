@@ -35,50 +35,52 @@ try {
 <?php endif; ?>
 
 <?php if (count($pagos) > 0): ?>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID Pago</th>
-                <th>Beneficiario</th>
-                <th>DNI</th>
-                <th>Contrato</th>
-                <th>Cuota</th>
-                <th>Fecha Pago</th>
-                <th>Monto</th>
-                <th>Penalidad</th>
-                <th>Total</th>
-                <th>Medio</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($pagos as $pago): ?>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td><strong><?php echo $pago['idpago']; ?></strong></td>
-                    <td><?php echo $pago['beneficiario_nombre']; ?></td>
-                    <td><?php echo $pago['beneficiario_dni']; ?></td>
-                    <td><?php echo $pago['idcontrato']; ?></td>
-                    <td><?php echo $pago['numcuota']; ?> de <?php echo $pago['numcuotas'] ?? ''; ?></td>
-                    <td><?php echo date('d/m/Y H:i', strtotime($pago['fechapago'])); ?></td>
-                    <td class="currency">S/. <?php echo number_format($pago['monto'], 2); ?></td>
-                    <td class="currency penalidad">
-                        <?php if ($pago['penalidad'] > 0): ?>
-                            S/. <?php echo number_format($pago['penalidad'], 2); ?>
-                        <?php else: ?>
-                            -
-                        <?php endif; ?>
-                    </td>
-                    <td class="currency total">S/. <?php echo number_format($pago['monto'] + $pago['penalidad'], 2); ?></td>
-                    <td>
-                        <?php if ($pago['medio'] === 'EFC'): ?>
-                            <span class="badge badge-efectivo">Efectivo</span>
-                        <?php else: ?>
-                            <span class="badge badge-deposito">Depósito</span>
-                        <?php endif; ?>
-                    </td>
+                    <th class="id-col">ID</th>
+                    <th class="beneficiario-col">BENEFICIARIO</th>
+                    <th class="dni-col">DNI</th>
+                    <th class="contrato-col">CONTRATO</th>
+                    <th class="cuota-col">CUOTA</th>
+                    <th class="fecha-col">FECHA PAGO</th>
+                    <th class="monto-col">MONTO</th>
+                    <th class="penalidad-col">PENALIDAD</th>
+                    <th class="total-col">TOTAL</th>
+                    <th class="medio-col">MEDIO</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php foreach ($pagos as $pago): ?>
+                    <tr>
+                        <td class="id-col"><?php echo $pago['idpago']; ?></td>
+                        <td class="beneficiario-col"><?php echo $pago['beneficiario_nombre']; ?></td>
+                        <td class="dni-col"><?php echo $pago['beneficiario_dni']; ?></td>
+                        <td class="contrato-col"><?php echo $pago['idcontrato']; ?></td>
+                        <td class="cuota-col"><?php echo $pago['numcuota']; ?> de <?php echo $pago['numcuotas'] ?? '12'; ?></td>
+                        <td class="fecha-col"><?php echo date('d/m/Y H:i', strtotime($pago['fechapago'])); ?></td>
+                        <td class="monto-col">S/. <?php echo number_format($pago['monto'], 2); ?></td>
+                        <td class="penalidad-col">
+                            <?php if ($pago['penalidad'] > 0): ?>
+                                S/. <?php echo number_format($pago['penalidad'], 2); ?>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+                        <td class="total-col">S/. <?php echo number_format($pago['monto'] + $pago['penalidad'], 2); ?></td>
+                        <td class="medio-col">
+                            <?php if ($pago['medio'] === 'EFC'): ?>
+                                <span class="badge badge-efectivo">Efectivo</span>
+                            <?php else: ?>
+                                <span class="badge badge-deposito">Depósito</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php else: ?>
     <div class="no-data">
         <div>💳</div>

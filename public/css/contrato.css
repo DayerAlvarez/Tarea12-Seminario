@@ -20,12 +20,87 @@
     box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
 
+/* Estilos para la tabla optimizada */
+.table-container {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    background: white;
+}
+
+.data-table {
+    width: 100%;
+}
+
+/* Estilos específicos para la tabla de contratos */
+.data-table .id-col {
+    width: 5%;
+    text-align: center;
+}
+
+.data-table .beneficiario-col {
+    width: 18%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.data-table .dni-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .monto-col {
+    width: 9%;
+    text-align: right;
+}
+
+.data-table .interes-col {
+    width: 7%;
+    text-align: center;
+}
+
+.data-table .fecha-col {
+    width: 9%;
+    text-align: center;
+}
+
+.data-table .dia-col {
+    width: 6%;
+    text-align: center;
+}
+
+.data-table .cuotas-col {
+    width: 8%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.data-table .estado-col {
+    width: 7%;
+    text-align: center;
+}
+
+.data-table .acciones-col {
+    width: 10%;
+    text-align: center;
+}
+
+.currency {
+    font-weight: 600;
+    color: #28a745;
+    white-space: nowrap;
+}
+
+/* Estilos para las insignias de estado */
 .badge {
+    display: inline-block;
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.8em;
     font-weight: 600;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .badge-active {
@@ -36,11 +111,6 @@
 .badge-finished {
     background: linear-gradient(135deg, #6c757d, #495057);
     color: white;
-}
-
-.currency {
-    font-weight: 600;
-    color: #28a745;
 }
 
 /* Modal específico para contratos */
@@ -340,7 +410,6 @@
 
 .cronograma-tabla {
     margin-top: 20px;
-    overflow-x: auto;
 }
 
 .estado-pagado {

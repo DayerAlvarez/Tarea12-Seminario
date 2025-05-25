@@ -7,6 +7,9 @@ class PagoController {
     private $contratoModel;
     
     public function __construct() {
+        // Establecer zona horaria para Perú
+        date_default_timezone_set('America/Lima');
+        
         $this->pagoModel = new Pago();
         $this->contratoModel = new Contrato();
     }

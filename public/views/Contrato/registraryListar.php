@@ -35,48 +35,50 @@ try {
 <?php endif; ?>
 
 <?php if (count($contratos) > 0): ?>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Beneficiario</th>
-                <th>DNI</th>
-                <th>Monto</th>
-                <th>Interés</th>
-                <th>Fecha Inicio</th>
-                <th>Día Pago</th>
-                <th>Cuotas</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($contratos as $contrato): ?>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td><strong><?php echo $contrato['idcontrato']; ?></strong></td>
-                    <td><?php echo $contrato['beneficiario_nombre']; ?></td>
-                    <td><?php echo $contrato['beneficiario_dni']; ?></td>
-                    <td class="currency">S/. <?php echo number_format($contrato['monto'], 2); ?></td>
-                    <td><?php echo number_format($contrato['interes'], 2); ?>%</td>
-                    <td><?php echo date('d/m/Y', strtotime($contrato['fechainicio'])); ?></td>
-                    <td>Día <?php echo $contrato['diapago']; ?></td>
-                    <td><?php echo $contrato['numcuotas']; ?> meses</td>
-                    <td>
-                        <?php if ($contrato['estado'] === 'ACT'): ?>
-                            <span class="badge badge-active">Activo</span>
-                        <?php else: ?>
-                            <span class="badge badge-finished">Finalizado</span>
-                        <?php endif; ?>
-                    </td>
-                    <td class="actions">
-                        <button type="button" class="btn-action" onclick="verCronograma(<?php echo $contrato['idcontrato']; ?>)">
-                            📅 Ver Cronograma
-                        </button>
-                    </td>
+                    <th class="id-col">ID</th>
+                    <th class="beneficiario-col">BENEFICIARIO</th>
+                    <th class="dni-col">DNI</th>
+                    <th class="monto-col">MONTO</th>
+                    <th class="interes-col">INTERÉS</th>
+                    <th class="fecha-col">FECHA INICIO</th>
+                    <th class="dia-col">DÍA PAGO</th>
+                    <th class="cuotas-col">CUOTAS</th>
+                    <th class="estado-col">ESTADO</th>
+                    <th class="acciones-col">ACCIONES</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php foreach ($contratos as $contrato): ?>
+                    <tr>
+                        <td class="id-col"><?php echo $contrato['idcontrato']; ?></td>
+                        <td class="beneficiario-col"><?php echo $contrato['beneficiario_nombre']; ?></td>
+                        <td class="dni-col"><?php echo $contrato['beneficiario_dni']; ?></td>
+                        <td class="monto-col">S/. <?php echo number_format($contrato['monto'], 2); ?></td>
+                        <td class="interes-col"><?php echo number_format($contrato['interes'], 2); ?>%</td>
+                        <td class="fecha-col"><?php echo date('d/m/Y', strtotime($contrato['fechainicio'])); ?></td>
+                        <td class="dia-col">Día <?php echo $contrato['diapago']; ?></td>
+                        <td class="cuotas-col"><?php echo $contrato['numcuotas']; ?> meses</td>
+                        <td class="estado-col">
+                            <?php if ($contrato['estado'] === 'ACT'): ?>
+                                <span class="badge badge-active">Activo</span>
+                            <?php else: ?>
+                                <span class="badge badge-finished">Finalizado</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="acciones-col">
+                            <button type="button" class="btn-action" onclick="verCronograma(<?php echo $contrato['idcontrato']; ?>)">
+                                📅 Ver Cronograma
+                            </button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php else: ?>
     <div class="no-data">
         <div>📋</div>

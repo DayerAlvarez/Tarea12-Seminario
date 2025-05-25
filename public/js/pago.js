@@ -219,6 +219,7 @@ function mostrarPaso2() {
     
     // Mostrar fecha actual
     const fechaActual = new Date();
+    // Formato de fecha y hora más legible y consistente con zona horaria local
     document.getElementById('fecha_actual').value = fechaActual.toLocaleDateString('es-ES') + ' ' + 
                                                     fechaActual.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
     

@@ -20,34 +20,71 @@
     box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
 }
 
-.badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8em;
-    font-weight: 600;
-    text-transform: uppercase;
+/* Estilos para la tabla optimizada */
+.table-container {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    background: white;
 }
 
-.badge-efectivo {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
+.data-table {
+    width: 100%;
 }
 
-.badge-deposito {
-    background: linear-gradient(135deg, #17a2b8, #0097e6);
-    color: white;
+/* Estilos específicos para la tabla de pagos */
+.data-table .id-col {
+    width: 5%;
+    text-align: center;
 }
 
-.currency {
-    font-weight: 600;
+.data-table .beneficiario-col {
+    width: 18%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.data-table .dni-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .contrato-col {
+    width: 6%;
+    text-align: center;
+}
+
+.data-table .cuota-col {
+    width: 8%;
+    text-align: center;
+}
+
+.data-table .fecha-col {
+    width: 9%;
+    text-align: center;
+}
+
+.data-table .monto-col,
+.data-table .penalidad-col,
+.data-table .total-col {
+    width: 9%;
+    text-align: right;
+}
+
+.data-table .medio-col {
+    width: 8%;
+    text-align: center;
 }
 
 .penalidad {
     color: #dc3545;
+    font-weight: 600;
 }
 
 .total {
     color: #28a745;
+    font-weight: 700;
 }
 
 /* Botón para anular pagos */
