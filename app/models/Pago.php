@@ -20,7 +20,7 @@ class Pago {
                 INNER JOIN contratos c ON p.idcontrato = c.idcontrato
                 INNER JOIN beneficiarios b ON c.idbeneficiario = b.idbeneficiario
                 WHERE p.fechapago IS NOT NULL
-                ORDER BY p.fechapago DESC
+                ORDER BY p.idpago ASC
             ");
             $stmt->execute();
             return $stmt->fetchAll();

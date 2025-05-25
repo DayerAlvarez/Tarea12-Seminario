@@ -35,14 +35,15 @@
 
 /* Estilos específicos para la tabla de pagos */
 .data-table .id-col {
-    width: 5%;
+    width: 4%;
     text-align: center;
 }
 
 .data-table .beneficiario-col {
-    width: 18%;
+    width: 22%; /* Aumentado para nombres completos */
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: normal; /* Permitir saltos de línea si es necesario */
 }
 
 .data-table .dni-col {
@@ -51,29 +52,29 @@
 }
 
 .data-table .contrato-col {
-    width: 6%;
+    width: 5%;
     text-align: center;
 }
 
 .data-table .cuota-col {
-    width: 8%;
+    width: 7%;
     text-align: center;
 }
 
 .data-table .fecha-col {
-    width: 9%;
+    width: 10%; /* Aumentado para fechas completas */
     text-align: center;
 }
 
 .data-table .monto-col,
 .data-table .penalidad-col,
 .data-table .total-col {
-    width: 9%;
+    width: 8%;
     text-align: right;
 }
 
 .data-table .medio-col {
-    width: 8%;
+    width: 7%;
     text-align: center;
 }
 

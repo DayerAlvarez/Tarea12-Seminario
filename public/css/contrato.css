@@ -35,14 +35,15 @@
 
 /* Estilos específicos para la tabla de contratos */
 .data-table .id-col {
-    width: 5%;
+    width: 4%;
     text-align: center;
 }
 
 .data-table .beneficiario-col {
-    width: 18%;
+    width: 22%; /* Aumentado para nombres completos */
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: normal; /* Permitir saltos de línea si es necesario */
 }
 
 .data-table .dni-col {
@@ -51,39 +52,40 @@
 }
 
 .data-table .monto-col {
-    width: 9%;
+    width: 8%;
     text-align: right;
 }
 
 .data-table .interes-col {
-    width: 7%;
-    text-align: center;
-}
-
-.data-table .fecha-col {
-    width: 9%;
-    text-align: center;
-}
-
-.data-table .dia-col {
     width: 6%;
     text-align: center;
 }
 
+.data-table .fecha-col {
+    width: 10%; /* Aumentado para fechas completas */
+    text-align: center;
+}
+
+.data-table .dia-col {
+    width: 5%;
+    text-align: center;
+}
+
 .data-table .cuotas-col {
-    width: 8%;
+    width: 7%;
     text-align: center;
     white-space: nowrap;
 }
 
 .data-table .estado-col {
-    width: 7%;
+    width: 6%;
     text-align: center;
 }
 
 .data-table .acciones-col {
-    width: 10%;
+    width: 12%; /* Aumentado para botones completos */
     text-align: center;
+    white-space: nowrap; /* Evitar que los botones se rompan */
 }
 
 .currency {

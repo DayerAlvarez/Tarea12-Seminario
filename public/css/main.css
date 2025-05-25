@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px; /* Aumentado de 1200px para mejor visualización */
     margin: 0 auto;
     background: white;
     border-radius: 15px;
@@ -113,6 +113,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     background: white;
+    overflow-x: auto; /* Permite scroll horizontal solo si es necesario */
 }
 
 /* Estilos mejorados para las tablas */
@@ -120,7 +121,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    table-layout: fixed;
+    table-layout: auto; /* Cambiado de fixed para mejor ajuste del contenido */
 }
 
 .data-table th {
@@ -132,6 +133,7 @@ body {
     text-transform: uppercase;
     font-size: 0.9em;
     letter-spacing: 0.5px;
+    white-space: nowrap; /* Evita que los encabezados se rompan */
 }
 
 .data-table td {
@@ -141,14 +143,14 @@ body {
     vertical-align: middle;
 }
 
-/* Columnas con anchos específicos */
+/* Columnas con anchos específicos ajustados */
 .data-table .id-col {
-    width: 5%;
+    width: 4%;
     text-align: center;
 }
 
 .data-table .beneficiario-col {
-    width: 18%;
+    width: 22%; /* Aumentado para mostrar nombres completos */
 }
 
 .data-table .dni-col {
@@ -157,55 +159,56 @@ body {
 }
 
 .data-table .contrato-col {
-    width: 6%;
+    width: 5%;
     text-align: center;
 }
 
 .data-table .monto-col,
 .data-table .total-col {
-    width: 9%;
+    width: 8%;
     text-align: right;
 }
 
 .data-table .interes-col {
-    width: 7%;
+    width: 6%;
     text-align: center;
 }
 
 .data-table .fecha-col {
-    width: 9%;
+    width: 10%; /* Aumentado para mostrar fechas completas */
     text-align: center;
 }
 
 .data-table .dia-col {
-    width: 6%;
+    width: 5%;
     text-align: center;
 }
 
 .data-table .cuota-col,
 .data-table .cuotas-col {
-    width: 8%;
-    text-align: center;
-}
-
-.data-table .penalidad-col {
-    width: 9%;
-    text-align: right;
-}
-
-.data-table .estado-col {
     width: 7%;
     text-align: center;
 }
 
-.data-table .medio-col {
+.data-table .penalidad-col {
     width: 8%;
+    text-align: right;
+}
+
+.data-table .estado-col {
+    width: 6%;
+    text-align: center;
+}
+
+.data-table .medio-col {
+    width: 7%;
     text-align: center;
 }
 
 .data-table .acciones-col {
-    width: 10%;
+    width: 12%; /* Aumentado para mostrar botones completos */
     text-align: center;
+    white-space: nowrap; /* Evita que los botones se rompan */
 }
 
 /* Manejo de texto largo en celdas */
@@ -213,6 +216,13 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Permitir que los nombres de beneficiarios se muestren completos */
+.data-table .beneficiario-col {
+    max-width: 250px; /* Ancho máximo */
+    white-space: normal; /* Permitir que el texto se envuelva si es necesario */
+    word-break: break-word; /* Romper palabras largas */
 }
 
 /* Estilos para valores monetarios */
