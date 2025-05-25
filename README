@@ -1,0 +1,115 @@
+# Sistema de Préstamos Web
+
+Sistema para la gestión de préstamos que permite administrar beneficiarios, contratos y pagos de cuotas.
+
+## Estructura del Proyecto
+
+```
+prestamos-web/
+├── app/
+│   ├── controllers/
+│   │   ├── beneficiario.controller.php
+│   │   ├── contrato.controller.php
+│   │   └── pago.controller.php
+│   └── models/
+│       ├── Beneficiario.php
+│       ├── Conexion.php
+│       ├── Contrato.php
+│       └── Pago.php
+├── database/
+├── public/
+│   ├── css/
+│   │   ├── beneficiario.css
+│   │   ├── contrato.css
+│   │   ├── main.css
+│   │   └── pago.css
+│   ├── js/
+│   │   ├── beneficiario.js
+│   │   ├── contrato.js
+│   │   └── pago.js
+│   └── views/
+│       ├── Beneficiario/
+│       │   └── registraryListar.php
+│       ├── Contrato/
+│       │   └── registraryListar.php
+│       └── Pago/
+│           └── listar.php
+├── .gitignore
+├── index.php
+├── package-lock.json
+├── package.json
+└── README.md
+```
+
+## Descripción de los componentes
+
+### Base de Datos
+
+La base de datos `prestamos` contiene las siguientes tablas:
+
+- **beneficiarios**: Almacena información de los clientes (apellidos, nombres, DNI, teléfono, dirección).
+- **contratos**: Guarda los contratos de préstamos (beneficiario, monto, interés, fechas, estado).
+- **pagos**: Registra las cuotas y pagos realizados (contrato, número de cuota, monto, penalidad).
+
+### Modelos (app/models/)
+
+- **Conexion.php**: Establece la conexión PDO a la base de datos MySQL.
+- **Beneficiario.php**: Gestiona las operaciones CRUD para beneficiarios. Incluye validaciones para DNI (8 dígitos) y teléfono (9 dígitos).
+- **Contrato.php**: Maneja los contratos de préstamo, con funciones para crear, actualizar, finalizar contratos y generar cronogramas de pago.
+- **Pago.php**: Administra los pagos de cuotas, con cálculo de penalidades por pagos tardíos (10%).
+
+### Controladores (app/controllers/)
+
+- **beneficiario.controller.php**: Controla las operaciones relacionadas con beneficiarios, procesa formularios y maneja peticiones AJAX.
+- **contrato.controller.php**: Gestiona la creación y administración de contratos, incluyendo la generación de cronogramas de pago.
+- **pago.controller.php**: Controla el registro de pagos de cuotas, con cálculo de penalidades automático.
+
+### Vistas (public/views/)
+
+- **Beneficiario/registraryListar.php**: Muestra el formulario de registro y listado de beneficiarios.
+- **Contrato/registraryListar.php**: Presenta el formulario para crear contratos y listar los existentes.
+- **Pago/listar.php**: Ofrece la interfaz para registrar pagos y visualizar el historial.
+
+### Estilos CSS (public/css/)
+
+- **main.css**: Estilos generales del sistema, incluyendo tablas, formularios y componentes comunes.
+- **beneficiario.css**: Estilos específicos para la sección de beneficiarios.
+- **contrato.css**: Estilos para contratos, incluyendo el modal de cronograma.
+- **pago.css**: Estilos para la sección de pagos.
+
+### JavaScript (public/js/)
+
+- **beneficiario.js**: Funcionalidades cliente para la gestión de beneficiarios.
+- **contrato.js**: Scripts para contratos, incluyendo búsqueda de beneficiarios, cálculo de préstamos y visualización de cronogramas.
+- **pago.js**: Código para el registro de pagos y búsqueda de contratos por DNI.
+
+### Punto de entrada (index.php)
+
+Actúa como controlador frontal, procesando las solicitudes y cargando los controladores según la sección seleccionada (beneficiarios, contratos o pagos).
+
+## Funcionalidades
+
+### Módulo de Beneficiarios
+- Registro de beneficiarios con validación de DNI y teléfono
+- Listado de beneficiarios existentes
+- Edición y eliminación de beneficiarios
+
+### Módulo de Contratos
+- Creación de contratos asociados a beneficiarios
+- Configuración de montos, intereses, plazos y fechas de pago
+- Visualización de cronograma de pagos
+- Control de un contrato activo por beneficiario
+
+### Módulo de Pagos
+- Registro de pagos de cuotas
+- Aplicación automática de penalidades por pagos tardíos
+- Soporte para diferentes medios de pago (efectivo, depósito)
+- Historial de pagos realizados
+
+## Características técnicas
+
+- Implementación del patrón MVC
+- Validación de datos en servidor y cliente
+- Conexión a base de datos mediante PDO
+- Interfaz responsiva con CSS personalizado
+- Interacciones dinámicas con JavaScript
