@@ -1,192 +1,241 @@
-# 💰 Sistema de Préstamos Web
+# Sistema de Préstamos Web
 
----
+Sistema para la gestión integral de préstamos, beneficiarios y pagos.
 
-## 📋 Descripción
+## Instalación
 
-Sistema completo para la gestión de préstamos que permite administrar beneficiarios, contratos y pagos de cuotas de manera eficiente.
+### Clonar Repositorio
+```
+git clone https://github.com/usuario/prestamos-web
+```
 
----
+### Configurar la base de datos
+- Cree una base de datos MySQL llamada `prestamos`
+- Importe el script SQL proporcionado
 
-## 📁 Estructura del Proyecto
+### Configurar conexión a base de datos
+Modifique el archivo `app/models/Conexion.php` con los datos de su servidor:
+```php
+private $host = 'localhost';
+private $dbname = 'prestamos';
+private $username = 'root';
+private $password = '';
+```
+
+### Coloque los archivos en un servidor web
+- Configure el servidor web para que apunte al directorio raíz del proyecto
+- Asegúrese de que PHP 7.4+ esté instalado y configurado
+
+## Base de Datos
+
+```sql
+CREATE DATABASE prestamos;
+USE prestamos;
+
+CREATE TABLE beneficiarios
+(
+	idbeneficiario	INT AUTO_INCREMENT PRIMARY KEY,
+    apellidos		VARCHAR(50) 		NOT NULL,
+    nombres 		VARCHAR(50) 		NOT NULL,
+    dni 			CHAR(8) 			NOT NULL,
+    telefono 		CHAR(9) 			NOT NULL,
+    direccion 		VARCHAR(90) 		NULL,
+    creado 			DATETIME 			NOT NULL DEFAULT NOW(),
+    modificado 		DATETIME 			NULL,
+    CONSTRAINT uk_dni_be UNIQUE (dni)
+)ENGINE = INNODB;
+
+CREATE TABLE contratos
+(
+	idcontrato 		INT AUTO_INCREMENT PRIMARY KEY,
+    idbeneficiario  INT 			NOT NULL,
+    monto 			DECIMAL(7,2)  	NOT NULL,
+    interes 		DECIMAL(5,2)  	NOT NULL,
+    fechainicio 	DATE 			NOT NULL,
+    diapago 		TINYINT 		NOT NULL,
+    numcuotas 		TINYINT 		NOT NULL COMMENT 'Expresado en meses',
+    estado 			ENUM('ACT','FIN') NOT NULL DEFAULT 'ACT' COMMENT 'ACT = Activo, FIN = Finalizo',
+    creado 			DATETIME 			NOT NULL DEFAULT NOW(),
+    modificado 		DATETIME 			NULL,
+    CONSTRAINT fk_idbeneficiario_con FOREIGN KEY (idbeneficiario) REFERENCES beneficiarios (idbeneficiario)
+)ENGINE = INNODB;
+
+CREATE TABLE pagos
+(
+	idpago		INT AUTO_INCREMENT PRIMARY KEY,
+    idcontrato	INT 			NOT NULL,
+    numcuota 	TINYINT 		NOT NULL COMMENT 'Se debe cancelar la cuota en su totalidad sin AMORTIZACIONES',
+    fechapago	DATETIME 		NOT NULL COMMENT 'Fecha efectiva de pago',
+    monto 		DECIMAL(7,2)	NOT NULL,
+    penalidad	DECIMAL(7,2)	NOT NULL DEFAULT 0 COMMENT '10% del valor de la cuota',
+    medio 		ENUM('EFC', 'DEP')NOT NULL COMMENT 'EFC = Efectivo, DEP = Depósito',
+    CONSTRAINT fk_idcontrato_pag FOREIGN KEY (idcontrato) REFERENCES contratos (idcontrato),
+    CONSTRAINT uk_numcuota_pag UNIQUE (idcontrato, numcuota)
+)ENGINE = INNODB;
+```
+
+## Estructura del Proyecto
 
 ```
 prestamos-web/
 ├── app/
-│   ├── controllers/
+│   ├── controllers/      # Controladores del sistema
 │   │   ├── beneficiario.controller.php
 │   │   ├── contrato.controller.php
 │   │   └── pago.controller.php
-│   └── models/
+│   └── models/           # Modelos de datos
 │       ├── Beneficiario.php
 │       ├── Conexion.php
 │       ├── Contrato.php
 │       └── Pago.php
-├── database/
 ├── public/
-│   ├── css/
+│   ├── css/              # Estilos CSS
 │   │   ├── beneficiario.css
 │   │   ├── contrato.css
 │   │   ├── main.css
 │   │   └── pago.css
-│   ├── js/
+│   ├── js/               # Scripts JavaScript
 │   │   ├── beneficiario.js
 │   │   ├── contrato.js
 │   │   └── pago.js
-│   └── views/
+│   └── views/            # Vistas HTML/PHP
 │       ├── Beneficiario/
 │       │   └── registraryListar.php
 │       ├── Contrato/
 │       │   └── registraryListar.php
 │       └── Pago/
 │           └── listar.php
-├── .gitignore
-├── index.php
-├── package-lock.json
-├── package.json
+├── index.php             # Punto de entrada
 └── README.md
 ```
 
----
+## Módulos del Sistema
 
-## 🗄️ Base de Datos
+### Módulo de Beneficiarios
+- Gestión de datos personales de clientes
+- Validación de DNI (8 dígitos) y teléfono (9 dígitos)
+- Operaciones CRUD completas
 
-La base de datos `prestamos` contiene las siguientes tablas:
+### Módulo de Contratos
+- Creación de contratos de préstamo
+- Cálculo automático de cuotas mensuales
+- Visualización de cronograma de pagos
+- Control de estado de contratos (activo/finalizado)
 
-| Tabla | Descripción |
-|-------|-------------|
-| **beneficiarios** | Información de clientes (apellidos, nombres, DNI, teléfono, dirección) |
-| **contratos** | Datos de préstamos (beneficiario, monto, interés, fechas, estado) |
-| **pagos** | Registro de cuotas y pagos (contrato, número de cuota, monto, penalidad) |
+### Módulo de Pagos
+- Registro de pagos de cuotas
+- Cálculo automático de penalidades por pagos tardíos (10%)
+- Historial de pagos realizados
+- Soporte para diferentes medios de pago
 
----
+## Funcionalidades API (index.php)
 
-## 🧩 Componentes del Sistema
+### Beneficiarios
 
-### 📊 Modelos (`app/models/`)
+**GET**
+- `?seccion=beneficiarios` - Mostrar lista de beneficiarios
 
-* **✨ Conexion.php**
-  * Establece la conexión PDO a la base de datos MySQL
-  * Gestiona errores de conexión
+**POST**
+- `?seccion=beneficiarios&action=crear` - Crear nuevo beneficiario
+- `?seccion=beneficiarios&action=actualizar` - Actualizar beneficiario existente
 
-* **👤 Beneficiario.php**
-  * Operaciones CRUD para beneficiarios
-  * Validaciones para DNI (8 dígitos) y teléfono (9 dígitos)
-  * Búsqueda de beneficiarios por diferentes criterios
+**DELETE**
+- `?seccion=beneficiarios&action=eliminar&id=:id` - Eliminar beneficiario
 
-* **📝 Contrato.php**
-  * Creación y gestión de contratos de préstamo
-  * Cálculo automático de cuotas con sistema de amortización
-  * Generación de cronogramas de pago
-  * Control de contratos activos por beneficiario
+### Contratos
 
-* **💳 Pago.php**
-  * Registro de pagos de cuotas
-  * Cálculo automático de penalidades (10%)
-  * Obtención de cuotas pendientes y pagadas
+**GET**
+- `?seccion=contratos` - Mostrar lista de contratos
+- `?seccion=contratos&action=buscar_beneficiario&dni=:dni` - Buscar beneficiario por DNI
+- `?seccion=contratos&action=cronograma&id=:id` - Obtener cronograma de pagos
 
-### 🎮 Controladores (`app/controllers/`)
+**POST**
+- `?seccion=contratos&action=crear` - Crear nuevo contrato
+- `?seccion=contratos&action=actualizar` - Actualizar contrato existente
 
-* **👥 beneficiario.controller.php**
-  * Procesa formularios de beneficiarios
-  * Valida datos de entrada
-  * Maneja peticiones AJAX para búsquedas
+**PUT/POST**
+- `?seccion=contratos&action=finalizar&id=:id` - Finalizar contrato
 
-* **📋 contrato.controller.php**
-  * Gestiona creación y finalización de contratos
-  * Genera cronogramas de pago
-  * Busca beneficiarios por DNI para asociar contratos
+**DELETE**
+- `?seccion=contratos&action=eliminar&id=:id` - Eliminar contrato
 
-* **💲 pago.controller.php**
-  * Registra pagos con cálculo de penalidades
-  * Busca contratos activos por DNI
-  * Obtiene cuotas pendientes para pagos
+### Pagos
 
-### 🖥️ Vistas (`public/views/`)
+**GET**
+- `?seccion=pagos` - Mostrar lista de pagos realizados
+- `?seccion=pagos&action=buscar_contrato&dni=:dni` - Buscar contrato por DNI del beneficiario
 
-* **Beneficiario/registraryListar.php**
-  * Formulario de registro de beneficiarios
-  * Listado de beneficiarios existentes
-  * Modal para edición de datos
+**POST**
+- `?seccion=pagos&action=registrar` - Registrar nuevo pago
 
-* **Contrato/registraryListar.php**
-  * Formulario para crear contratos
-  * Listado de contratos existentes
-  * Modal para visualizar cronograma de pagos
+## Validaciones Implementadas
 
-* **Pago/listar.php**
-  * Interfaz para registrar pagos
-  * Historial de pagos realizados
-  * Búsqueda de contratos por DNI
+### Beneficiarios
+- DNI debe tener exactamente 8 dígitos numéricos
+- Teléfono debe tener exactamente 9 dígitos numéricos
+- No se pueden eliminar beneficiarios con contratos asociados
 
-### 🎨 Estilos CSS (`public/css/`)
+### Contratos
+- El monto del préstamo debe ser mayor que cero
+- El interés debe estar entre 0 y 100%
+- La fecha de inicio no puede ser anterior a la fecha actual
+- El día de pago debe estar entre 1 y 31
+- El número de cuotas debe ser entre 1 y 255
+- Un beneficiario solo puede tener un contrato activo a la vez
+- No se pueden actualizar contratos finalizados
+- No se pueden eliminar contratos con pagos registrados
 
-* **main.css**: Estilos globales del sistema (tablas, formularios, modales)
-* **beneficiario.css**: Estilos específicos para sección de beneficiarios
-* **contrato.css**: Estilos para contratos y cronogramas
-* **pago.css**: Estilos para la sección de pagos
+### Pagos
+- No se pueden registrar pagos parciales de cuotas
+- Penalidad automática del 10% para pagos tardíos
+- El medio de pago debe ser efectivo (EFC) o depósito (DEP)
+- No se puede registrar más de un pago para la misma cuota
 
-### 📱 JavaScript (`public/js/`)
+## Ejemplos de Uso
 
-* **beneficiario.js**: Validación de formularios y manejo de modales
-* **contrato.js**: Búsqueda de beneficiarios, cálculo de préstamos y visualización de cronogramas
-* **pago.js**: Registro de pagos y búsqueda de contratos por DNI
+### Registro de Beneficiario
+```json
+{
+  "apellidos": "Pérez López",
+  "nombres": "Juan Carlos",
+  "dni": "47123456",
+  "telefono": "987654321",
+  "direccion": "Av. Principal 123"
+}
+```
 
-### 🚪 Punto de entrada (`index.php`)
+### Creación de Contrato
+```json
+{
+  "idbeneficiario": 1,
+  "monto": 5000.00,
+  "interes": 5.00,
+  "fechainicio": "2023-05-15",
+  "diapago": 15,
+  "numcuotas": 12
+}
+```
 
-* Actúa como controlador frontal
-* Procesa solicitudes y redirecciona según la sección seleccionada
-* Carga los controladores correspondientes
-* Muestra la interfaz principal del sistema
+### Registro de Pago
+```json
+{
+  "idpago": 5,
+  "medio": "EFC"
+}
+```
 
----
+## Reglas de Negocio
 
-## ⚙️ Funcionalidades
+1. **Beneficiarios**
+   - El DNI es único en el sistema
+   - La dirección es opcional, los demás campos son obligatorios
 
-### 👥 Módulo de Beneficiarios
+2. **Contratos**
+   - Un beneficiario solo puede tener un contrato activo a la vez
+   - Las cuotas se calculan automáticamente con el sistema de amortización francés
+   - La fecha de inicio debe ser igual o posterior a la fecha actual
 
-* ✅ Registro de beneficiarios con validación de DNI y teléfono
-* ✅ Listado de beneficiarios existentes
-* ✅ Edición y eliminación de beneficiarios
-* ✅ Validación en tiempo real de datos de entrada
-
-### 📝 Módulo de Contratos
-
-* ✅ Creación de contratos asociados a beneficiarios
-* ✅ Configuración de montos, intereses, plazos y fechas de pago
-* ✅ Visualización de cronograma de pagos
-* ✅ Control de un contrato activo por beneficiario
-* ✅ Cálculo automático de cuotas mensuales
-
-### 💰 Módulo de Pagos
-
-* ✅ Registro de pagos de cuotas
-* ✅ Aplicación automática de penalidades por pagos tardíos
-* ✅ Soporte para diferentes medios de pago (efectivo, depósito)
-* ✅ Historial de pagos realizados
-
----
-
-## 🛠️ Características técnicas
-
-* ✅ Implementación del patrón MVC
-* ✅ Validación de datos en servidor y cliente
-* ✅ Conexión a base de datos mediante PDO
-* ✅ Interfaz responsiva con CSS personalizado
-* ✅ Interacciones dinámicas con JavaScript
-* ✅ Protección contra SQL Injection
-* ✅ Manejo de errores y excepciones
-
----
-
-## 📋 Reglas de negocio implementadas
-
-* Un beneficiario solo puede tener un contrato activo a la vez
-* Las penalidades por pago tardío son del 10% del valor de la cuota
-* No se pueden eliminar beneficiarios que tengan contratos asociados
-* No se pueden eliminar contratos que tengan pagos registrados
-* Cada cuota debe pagarse completa (no se permiten pagos parciales)
-
----
-
-⭐ Desarrollado para ofrecer una solución integral a la gestión de préstamos ⭐
+3. **Pagos**
+   - Las cuotas deben pagarse completas (sin amortizaciones parciales)
+   - Pagos realizados después de la fecha de vencimiento generan una penalidad del 10%
+   - Se registra la fecha efectiva de pago automáticamente
