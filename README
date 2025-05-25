@@ -1,33 +1,21 @@
 # Sistema de Préstamos Web
-
-Sistema para la gestión integral de préstamos, beneficiarios y pagos.
-
-## Instalación
-
-### Clonar Repositorio
+## Procedimientos para implementación
+1. Clonar Repositorio
 ```
 git clone https://github.com/usuario/prestamos-web
 ```
-
-### Configurar la base de datos
-- Cree una base de datos MySQL llamada `prestamos`
-- Importe el script SQL proporcionado
-
-### Configurar conexión a base de datos
-Modifique el archivo `app/models/Conexion.php` con los datos de su servidor:
+2. Configurar el servidor web
+```
+Apuntar DocumentRoot a la carpeta del proyecto
+```
+3. Configurar conexión a base de datos en app/models/Conexion.php
 ```php
 private $host = 'localhost';
 private $dbname = 'prestamos';
 private $username = 'root';
 private $password = '';
 ```
-
-### Coloque los archivos en un servidor web
-- Configure el servidor web para que apunte al directorio raíz del proyecto
-- Asegúrese de que PHP 7.4+ esté instalado y configurado
-
-## Base de Datos
-
+4. Restaurar la BD
 ```sql
 CREATE DATABASE prestamos;
 USE prestamos;
@@ -73,127 +61,80 @@ CREATE TABLE pagos
     CONSTRAINT uk_numcuota_pag UNIQUE (idcontrato, numcuota)
 )ENGINE = INNODB;
 ```
-
-## Estructura del Proyecto
-
+5. Ejecutar el proyecto:
 ```
-prestamos-web/
-├── app/
-│   ├── controllers/      # Controladores del sistema
-│   │   ├── beneficiario.controller.php
-│   │   ├── contrato.controller.php
-│   │   └── pago.controller.php
-│   └── models/           # Modelos de datos
-│       ├── Beneficiario.php
-│       ├── Conexion.php
-│       ├── Contrato.php
-│       └── Pago.php
-├── public/
-│   ├── css/              # Estilos CSS
-│   │   ├── beneficiario.css
-│   │   ├── contrato.css
-│   │   ├── main.css
-│   │   └── pago.css
-│   ├── js/               # Scripts JavaScript
-│   │   ├── beneficiario.js
-│   │   ├── contrato.js
-│   │   └── pago.js
-│   └── views/            # Vistas HTML/PHP
-│       ├── Beneficiario/
-│       │   └── registraryListar.php
-│       ├── Contrato/
-│       │   └── registraryListar.php
-│       └── Pago/
-│           └── listar.php
-├── index.php             # Punto de entrada
-└── README.md
+Acceder desde el navegador a la URL del proyecto
 ```
-
-## Módulos del Sistema
-
-### Módulo de Beneficiarios
-- Gestión de datos personales de clientes
-- Validación de DNI (8 dígitos) y teléfono (9 dígitos)
-- Operaciones CRUD completas
-
-### Módulo de Contratos
-- Creación de contratos de préstamo
-- Cálculo automático de cuotas mensuales
-- Visualización de cronograma de pagos
-- Control de estado de contratos (activo/finalizado)
-
-### Módulo de Pagos
-- Registro de pagos de cuotas
-- Cálculo automático de penalidades por pagos tardíos (10%)
-- Historial de pagos realizados
-- Soporte para diferentes medios de pago
-
-## Funcionalidades API (index.php)
-
+## Endpoints disponibles
 ### Beneficiarios
+#### GET
+- `?seccion=beneficiarios` - Mostrar vista de beneficiarios
+- `?seccion=beneficiarios&action=buscar_beneficiario&dni=:dni` - Buscar beneficiario por DNI
 
-**GET**
-- `?seccion=beneficiarios` - Mostrar lista de beneficiarios
-
-**POST**
+#### POST
 - `?seccion=beneficiarios&action=crear` - Crear nuevo beneficiario
-- `?seccion=beneficiarios&action=actualizar` - Actualizar beneficiario existente
+  - Validaciones:
+    - DNI debe tener exactamente 8 dígitos numéricos
+    - Teléfono debe tener exactamente 9 dígitos numéricos
+    - Apellidos y nombres no pueden exceder 50 caracteres
+    - Dirección no puede exceder 90 caracteres (puede ser NULL)
 
-**DELETE**
+- `?seccion=beneficiarios&action=actualizar` - Actualizar beneficiario existente
+  - Validaciones:
+    - Mismas validaciones que al crear
+
+#### DELETE
 - `?seccion=beneficiarios&action=eliminar&id=:id` - Eliminar beneficiario
+  - Restricciones:
+    - No se pueden eliminar beneficiarios con contratos asociados
 
 ### Contratos
-
-**GET**
-- `?seccion=contratos` - Mostrar lista de contratos
+#### GET
+- `?seccion=contratos` - Mostrar vista de contratos
 - `?seccion=contratos&action=buscar_beneficiario&dni=:dni` - Buscar beneficiario por DNI
 - `?seccion=contratos&action=cronograma&id=:id` - Obtener cronograma de pagos
 
-**POST**
+#### POST
 - `?seccion=contratos&action=crear` - Crear nuevo contrato
+  - Validaciones:
+    - El monto debe ser mayor a 0
+    - El interés debe estar entre 0 y 100
+    - La fecha de inicio no puede ser anterior a la fecha actual
+    - El día de pago debe estar entre 1 y 31
+    - El número de cuotas debe estar entre 1 y 255
+    - El beneficiario no debe tener contratos activos
+
 - `?seccion=contratos&action=actualizar` - Actualizar contrato existente
+  - Validaciones:
+    - Mismas validaciones que al crear
+    - No se pueden actualizar contratos finalizados
 
-**PUT/POST**
 - `?seccion=contratos&action=finalizar&id=:id` - Finalizar contrato
+  - Restricciones:
+    - El contrato debe existir
+    - El contrato debe estar activo
 
-**DELETE**
+#### DELETE
 - `?seccion=contratos&action=eliminar&id=:id` - Eliminar contrato
+  - Restricciones:
+    - No se pueden eliminar contratos con pagos realizados
 
 ### Pagos
-
-**GET**
-- `?seccion=pagos` - Mostrar lista de pagos realizados
+#### GET
+- `?seccion=pagos` - Mostrar vista de pagos
 - `?seccion=pagos&action=buscar_contrato&dni=:dni` - Buscar contrato por DNI del beneficiario
 
-**POST**
+#### POST
 - `?seccion=pagos&action=registrar` - Registrar nuevo pago
+  - Validaciones:
+    - El pago debe corresponder a una cuota pendiente
+    - El medio de pago debe ser válido ('EFC' o 'DEP')
+  - Comportamiento:
+    - Calcula automáticamente penalidad del 10% para pagos tardíos
+    - Registra la fecha actual como fecha efectiva de pago
 
-## Validaciones Implementadas
-
-### Beneficiarios
-- DNI debe tener exactamente 8 dígitos numéricos
-- Teléfono debe tener exactamente 9 dígitos numéricos
-- No se pueden eliminar beneficiarios con contratos asociados
-
-### Contratos
-- El monto del préstamo debe ser mayor que cero
-- El interés debe estar entre 0 y 100%
-- La fecha de inicio no puede ser anterior a la fecha actual
-- El día de pago debe estar entre 1 y 31
-- El número de cuotas debe ser entre 1 y 255
-- Un beneficiario solo puede tener un contrato activo a la vez
-- No se pueden actualizar contratos finalizados
-- No se pueden eliminar contratos con pagos registrados
-
-### Pagos
-- No se pueden registrar pagos parciales de cuotas
-- Penalidad automática del 10% para pagos tardíos
-- El medio de pago debe ser efectivo (EFC) o depósito (DEP)
-- No se puede registrar más de un pago para la misma cuota
-
-## Ejemplos de Uso
-
-### Registro de Beneficiario
+## Ejemplos de uso
+### Crear un beneficiario
 ```json
 {
   "apellidos": "Pérez López",
@@ -204,7 +145,7 @@ prestamos-web/
 }
 ```
 
-### Creación de Contrato
+### Crear un contrato
 ```json
 {
   "idbeneficiario": 1,
@@ -216,7 +157,7 @@ prestamos-web/
 }
 ```
 
-### Registro de Pago
+### Registrar un pago
 ```json
 {
   "idpago": 5,
@@ -224,18 +165,71 @@ prestamos-web/
 }
 ```
 
-## Reglas de Negocio
+### Buscar un beneficiario por DNI
+Acceder a la URL:
+```
+?seccion=contratos&action=buscar_beneficiario&dni=47123456
+```
+Respuesta:
+```json
+{
+  "exito": true,
+  "mensaje": "Beneficiario encontrado",
+  "datos": {
+    "idbeneficiario": 1,
+    "nombre_completo": "Pérez López, Juan Carlos",
+    "dni": "47123456",
+    "telefono": "987654321",
+    "direccion": "Av. Principal 123"
+  },
+  "tieneContratosActivos": false
+}
+```
 
-1. **Beneficiarios**
-   - El DNI es único en el sistema
-   - La dirección es opcional, los demás campos son obligatorios
-
-2. **Contratos**
-   - Un beneficiario solo puede tener un contrato activo a la vez
-   - Las cuotas se calculan automáticamente con el sistema de amortización francés
-   - La fecha de inicio debe ser igual o posterior a la fecha actual
-
-3. **Pagos**
-   - Las cuotas deben pagarse completas (sin amortizaciones parciales)
-   - Pagos realizados después de la fecha de vencimiento generan una penalidad del 10%
-   - Se registra la fecha efectiva de pago automáticamente
+### Obtener cronograma de pagos
+Acceder a la URL:
+```
+?seccion=contratos&action=cronograma&id=1
+```
+Respuesta:
+```json
+{
+  "exito": true,
+  "mensaje": "Cronograma obtenido correctamente",
+  "datos": {
+    "contrato": {
+      "idcontrato": 1,
+      "idbeneficiario": 1,
+      "beneficiario_nombre": "Pérez López, Juan Carlos",
+      "beneficiario_dni": "47123456",
+      "monto": 5000.00,
+      "interes": 5.00,
+      "fechainicio": "2023-05-15",
+      "diapago": 15,
+      "numcuotas": 12,
+      "estado": "ACT"
+    },
+    "cuotas": [
+      {
+        "idpago": 1,
+        "idcontrato": 1,
+        "numcuota": 1,
+        "monto": 428.04,
+        "fecha_vencimiento": "2023-06-15",
+        "fechapago": null,
+        "penalidad": 0.00
+      },
+      {
+        "idpago": 2,
+        "idcontrato": 1,
+        "numcuota": 2,
+        "monto": 428.04,
+        "fecha_vencimiento": "2023-07-15",
+        "fechapago": null,
+        "penalidad": 0.00
+      }
+      // ... más cuotas
+    ]
+  }
+}
+```
