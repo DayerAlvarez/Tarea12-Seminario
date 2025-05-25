@@ -47,8 +47,12 @@ class ContratoController {
                 throw new Exception("El beneficiario especificado no existe");
             }
             
-            // Validar que la fecha de inicio no sea anterior a hoy
-            if (strtotime($datos['fechainicio']) < strtotime(date('Y-m-d'))) {
+            // Validar que la fecha de inicio no sea anterior a hoy - CORREGIDO
+            // Comparar solo las fechas sin la hora
+            $fechaHoy = date('Y-m-d');
+            $fechaInicio = date('Y-m-d', strtotime($datos['fechainicio']));
+            
+            if (strtotime($fechaInicio) < strtotime($fechaHoy)) {
                 throw new Exception("La fecha de inicio no puede ser anterior a hoy");
             }
             
@@ -233,6 +237,76 @@ class ContratoController {
         }
     }
     
+    // Método para obtener el cronograma de pagos (para vista)
+    public function obtenerCronograma($id) {
+        try {
+            if (!$id || !is_numeric($id)) {
+                throw new Exception("ID de contrato inválido");
+            }
+            
+            // Verificar que el contrato existe
+            $contrato = $this->contratoModel->obtenerPorId($id);
+            if (!$contrato) {
+                throw new Exception("Contrato no encontrado");
+            }
+            
+            // Obtener información de cuotas (pagadas y pendientes)
+            require_once 'app/models/Pago.php';
+            $pagoModel = new Pago();
+            
+            // Obtener todas las cuotas (tanto pagadas como pendientes)
+            $cuotas = $pagoModel->obtenerCuotasPorContrato($id);
+            
+            // Calcular fechas de vencimiento para cada cuota
+            $fechaInicio = new DateTime($contrato['fechainicio']);
+            $diaPago = (int)$contrato['diapago'];
+            
+            // Mover al primer mes siguiente para empezar a contar
+            $fechaInicio->modify('+1 month');
+            
+            foreach ($cuotas as &$cuota) {
+                // Calcular fecha de vencimiento
+                $fechaVencimiento = clone $fechaInicio;
+                $fechaVencimiento->modify('+' . ($cuota['numcuota'] - 1) . ' month');
+                
+                // Ajustar al día de pago
+                $ultimoDiaMes = (int)$fechaVencimiento->format('t');
+                $diaEfectivo = min($diaPago, $ultimoDiaMes);
+                
+                $fechaVencimiento->setDate(
+                    $fechaVencimiento->format('Y'),
+                    $fechaVencimiento->format('m'),
+                    $diaEfectivo
+                );
+                
+                $cuota['fecha_vencimiento'] = $fechaVencimiento->format('Y-m-d');
+            }
+            
+            // Preparar respuesta
+            $respuesta = [
+                'contrato' => $contrato,
+                'cuotas' => $cuotas
+            ];
+            
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => true,
+                'mensaje' => 'Cronograma obtenido correctamente',
+                'datos' => $respuesta
+            ]);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => false,
+                'mensaje' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+    
     // API REST - Listar todos los contratos
     public function listar() {
         try {
@@ -339,8 +413,11 @@ class ContratoController {
                 throw new Exception("El beneficiario especificado no existe");
             }
             
-            // Validar que la fecha de inicio no sea anterior a hoy
-            if (strtotime($datos['fechainicio']) < strtotime(date('Y-m-d'))) {
+            // Validar que la fecha de inicio no sea anterior a hoy - CORREGIDO
+            $fechaHoy = date('Y-m-d');
+            $fechaInicio = date('Y-m-d', strtotime($datos['fechainicio']));
+            
+            if (strtotime($fechaInicio) < strtotime($fechaHoy)) {
                 throw new Exception("La fecha de inicio no puede ser anterior a hoy");
             }
             

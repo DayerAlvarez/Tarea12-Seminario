@@ -213,10 +213,20 @@ function validarFormulario() {
         return false;
     }
     
-    // Validar que la fecha no sea anterior a hoy
+    // Validar que la fecha no sea anterior a hoy - CORREGIDO
+    // Obtenemos solo la fecha sin hora
     const hoy = new Date();
-    const fechaSeleccionada = new Date(fechainicio);
-    if (fechaSeleccionada < hoy.setHours(0,0,0,0)) {
+    const fechaHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    
+    const partesFechaSeleccionada = fechainicio.split('-');
+    const fechaSeleccionada = new Date(
+        parseInt(partesFechaSeleccionada[0]), 
+        parseInt(partesFechaSeleccionada[1]) - 1, // Los meses en JS van de 0-11
+        parseInt(partesFechaSeleccionada[2])
+    );
+    
+    // Comparación solo de fechas sin tiempo
+    if (fechaSeleccionada < fechaHoy) {
         alert('La fecha de inicio no puede ser anterior a hoy');
         return false;
     }
@@ -234,13 +244,138 @@ function validarFormulario() {
     return confirm(`¿Está seguro de crear este contrato de préstamo para ${beneficiarioSeleccionado.nombre_completo}?`);
 }
 
+// Abrir modal de cronograma
+function verCronograma(idContrato) {
+    // Mostrar modal de cronograma
+    document.getElementById('modalCronograma').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Mostrar loader y ocultar contenido
+    document.getElementById('cronogramaLoader').style.display = 'block';
+    document.getElementById('cronogramaInfo').style.display = 'none';
+    document.getElementById('cronogramaTabla').innerHTML = '';
+    
+    // Hacer petición para obtener cronograma
+    fetch(`?seccion=contratos&action=cronograma&id=${idContrato}`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('cronogramaLoader').style.display = 'none';
+        
+        if (data.exito) {
+            mostrarCronograma(data.datos);
+        } else {
+            document.getElementById('cronogramaTabla').innerHTML = `
+                <div class="no-data">
+                    <p>Error: ${data.mensaje}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById('cronogramaLoader').style.display = 'none';
+        document.getElementById('cronogramaTabla').innerHTML = `
+            <div class="no-data">
+                <p>Error al cargar cronograma: ${error.message}</p>
+            </div>
+        `;
+        console.error('Error:', error);
+    });
+}
+
+// Cerrar modal de cronograma
+function cerrarModalCronograma() {
+    document.getElementById('modalCronograma').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Mostrar cronograma
+function mostrarCronograma(datos) {
+    const contrato = datos.contrato;
+    const cuotas = datos.cuotas;
+    
+    // Mostrar información del contrato
+    document.getElementById('cronogramaInfo').style.display = 'block';
+    document.getElementById('cronogramaTitulo').textContent = `Cronograma de Pagos - Contrato #${contrato.idcontrato}`;
+    document.getElementById('cronogramaBeneficiario').textContent = contrato.beneficiario_nombre;
+    document.getElementById('cronogramaDni').textContent = contrato.beneficiario_dni;
+    document.getElementById('cronogramaMonto').textContent = `S/. ${parseFloat(contrato.monto).toFixed(2)}`;
+    document.getElementById('cronogramaInteres').textContent = `${parseFloat(contrato.interes).toFixed(2)}%`;
+    
+    // Generar tabla de cuotas
+    let tablaHTML = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>N° Cuota</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Fecha Pago</th>
+                    <th>Penalidad</th>
+                    <th>Total Pagado</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    cuotas.forEach(cuota => {
+        const fechaVencimiento = new Date(cuota.fecha_vencimiento);
+        const fechaVencimientoFormatted = fechaVencimiento.toLocaleDateString('es-ES');
+        
+        const estaPagada = cuota.fechapago !== null;
+        const estaVencida = !estaPagada && new Date() > fechaVencimiento;
+        
+        const estadoClass = estaPagada ? 'estado-pagado' : (estaVencida ? 'estado-vencido' : 'estado-pendiente');
+        const estadoTexto = estaPagada ? 'Pagado' : (estaVencida ? 'Vencido' : 'Pendiente');
+        
+        let fechaPagoFormatted = '-';
+        let penalidad = '-';
+        let totalPagado = '-';
+        
+        if (estaPagada) {
+            const fechaPago = new Date(cuota.fechapago);
+            fechaPagoFormatted = fechaPago.toLocaleDateString('es-ES');
+            penalidad = `S/. ${parseFloat(cuota.penalidad).toFixed(2)}`;
+            totalPagado = `S/. ${(parseFloat(cuota.monto) + parseFloat(cuota.penalidad)).toFixed(2)}`;
+        }
+        
+        tablaHTML += `
+            <tr>
+                <td>${cuota.numcuota}</td>
+                <td>${fechaVencimientoFormatted}</td>
+                <td class="currency">S/. ${parseFloat(cuota.monto).toFixed(2)}</td>
+                <td><span class="badge ${estadoClass}">${estadoTexto}</span></td>
+                <td>${fechaPagoFormatted}</td>
+                <td>${penalidad}</td>
+                <td>${totalPagado}</td>
+            </tr>
+        `;
+    });
+    
+    tablaHTML += `
+            </tbody>
+        </table>
+    `;
+    
+    document.getElementById('cronogramaTabla').innerHTML = tablaHTML;
+}
+
 // Inicialización del módulo
 document.addEventListener('DOMContentLoaded', function() {
     // Cerrar modal al hacer clic fuera de él
     window.onclick = function(event) {
-        const modal = document.getElementById('modalContrato');
-        if (event.target == modal) {
+        const modalContrato = document.getElementById('modalContrato');
+        const modalCronograma = document.getElementById('modalCronograma');
+        
+        if (event.target == modalContrato) {
             cerrarModal();
+        } else if (event.target == modalCronograma) {
+            cerrarModalCronograma();
         }
     };
 

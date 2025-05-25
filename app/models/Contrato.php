@@ -288,6 +288,7 @@ class Contrato {
         
         return $errores;
     }
+    
     // Método adicional para comprobar si un beneficiario tiene contratos activos
     public function obtenerActivosPorBeneficiario($idBeneficiario) {
         try {
@@ -302,6 +303,26 @@ class Contrato {
             return $stmt->fetchAll();
         } catch(PDOException $e) {
             throw new Exception("Error al obtener contratos activos del beneficiario: " . $e->getMessage());
+        }
+    }
+    
+    // Método para obtener contratos activos por DNI del beneficiario
+    public function obtenerActivosPorDni($dni) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT c.*, 
+                       CONCAT(b.apellidos, ', ', b.nombres) as beneficiario_nombre,
+                       b.dni as beneficiario_dni
+                FROM contratos c 
+                INNER JOIN beneficiarios b ON c.idbeneficiario = b.idbeneficiario 
+                WHERE b.dni = :dni AND c.estado = 'ACT'
+                ORDER BY c.fechainicio DESC
+            ");
+            $stmt->bindParam(':dni', $dni);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch(PDOException $e) {
+            throw new Exception("Error al obtener contratos por DNI: " . $e->getMessage());
         }
     }
 }

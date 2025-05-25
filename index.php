@@ -90,6 +90,17 @@ if (isset($_GET['action'])) {
                     echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
                     exit;
                 }
+            } else if ($accion === 'cronograma' && isset($_GET['id'])) {
+                // Endpoint para obtener el cronograma de pagos (AJAX)
+                try {
+                    $resultado = $controller->obtenerCronograma($_GET['id']);
+                    // No hacer redirect ya que es una llamada AJAX
+                    exit;
+                } catch (Exception $e) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+                    exit;
+                }
             }
             break;
             
@@ -99,17 +110,21 @@ if (isset($_GET['action'])) {
             
             if ($accion === 'registrar') {
                 try {
-                    $respuesta = $controller->registrarDesdeFormulario($_POST);
+                    $respuesta = $controller->registrarPagoDesdeFormulario($_POST);
                     $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
                 } catch (Exception $e) {
                     $_SESSION['mensaje_error'] = $e->getMessage();
                 }
-            } else if ($accion === 'anular' && isset($_GET['id'])) {
+            } else if ($accion === 'buscar_contrato' && isset($_GET['dni'])) {
+                // Endpoint para buscar contrato por DNI (AJAX)
                 try {
-                    $respuesta = $controller->anular($_GET['id']);
-                    $_SESSION['mensaje_exito'] = $respuesta['mensaje'];
+                    $resultado = $controller->buscarContratoPorDni($_GET['dni']);
+                    // No hacer redirect ya que es una llamada AJAX
+                    exit;
                 } catch (Exception $e) {
-                    $_SESSION['mensaje_error'] = $e->getMessage();
+                    header('Content-Type: application/json');
+                    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+                    exit;
                 }
             }
             break;

@@ -23,7 +23,7 @@ try {
 
 <div class="section-header">
     <h2 class="section-title">Lista de Beneficiarios</h2>
-    <button class="btn-registrar" onclick="abrirModal()">+ Registrar Beneficiario</button>
+    <button class="btn-registrar" onclick="abrirModal()">+ Registrar Nuevo Beneficiario</button>
 </div>
 
 <?php if (isset($mensaje_exito)): ?>

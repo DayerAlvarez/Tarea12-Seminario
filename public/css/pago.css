@@ -1,7 +1,7 @@
 /* Estilos específicos para el módulo de Pagos */
 
 .btn-registrar {
-    background: linear-gradient(135deg, #6f42c1, #007bff);
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
     color: white;
     padding: 12px 25px;
     border: none;
@@ -20,7 +20,7 @@
     box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
 }
 
-.payment-status {
+.badge {
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.8em;
@@ -28,193 +28,334 @@
     text-transform: uppercase;
 }
 
-.status-pending {
-    background: linear-gradient(135deg, #ffc107, #ff9800);
-    color: white;
-}
-
-.status-paid {
+.badge-efectivo {
     background: linear-gradient(135deg, #28a745, #20c997);
     color: white;
 }
 
-.payment-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.btn-pay {
-    padding: 6px 12px;
-    background: linear-gradient(135deg, #28a745, #20c997);
+.badge-deposito {
+    background: linear-gradient(135deg, #17a2b8, #0097e6);
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8em;
-    transition: all 0.3s ease;
 }
 
-.btn-pay:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
-}
-
-.payment-date {
+.currency {
     font-weight: 600;
-    color: #6f42c1;
 }
 
-.payment-amount {
-    font-weight: 600;
+.penalidad {
+    color: #dc3545;
+}
+
+.total {
     color: #28a745;
 }
 
-.calendar-view {
-    margin-top: 30px;
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.calendar-title {
-    font-size: 1.5em;
-    font-weight: 700;
-    color: #2c3e50;
-}
-
-.calendar-nav {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-nav {
-    padding: 8px 15px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
+/* Botón para anular pagos */
+.btn-anular {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
 }
 
-.btn-nav:hover {
-    background: #e9ecef;
-}
-
-.upcoming-payments {
-    margin-top: 30px;
-}
-
-.upcoming-title {
-    font-size: 1.3em;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #f1f3f4;
-    padding-bottom: 10px;
-}
-
-.empty-payments {
-    background: #f8f9fa;
-    padding: 30px;
-    text-align: center;
-    border-radius: 10px;
-    color: #6c757d;
-}
-
-.empty-payments i {
-    font-size: 3em;
-    margin-bottom: 15px;
-    opacity: 0.5;
+.btn-anular:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
 }
 
 /* Modal específico para pagos */
 .pago-modal .modal-header {
-    background: linear-gradient(135deg, #6f42c1, #007bff);
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+    color: white;
+    padding: 20px 25px;
 }
 
-.pago-modal .btn-primary {
-    background: linear-gradient(135deg, #6f42c1, #007bff);
+.pago-modal .modal-header::before {
+    content: '💳';
+    font-size: 1.5em;
+    margin-right: 10px;
 }
 
-.pago-modal .btn-primary:hover {
-    box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+/* Modal compacto sin scroll */
+.compact-modal {
+    max-width: 800px;
+    width: 90%;
+    margin: 5vh auto;
 }
 
-/* Estilos para visualización de historial */
-.payment-history {
-    margin-top: 30px;
+.no-scroll {
+    overflow: visible;
+    padding: 25px;
 }
 
-.history-title {
-    font-size: 1.3em;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #f1f3f4;
-    padding-bottom: 10px;
-}
-
-.payment-card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    padding: 20px;
-    margin-bottom: 15px;
+/* Contenedor de búsqueda */
+.search-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
 }
 
-.payment-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-}
-
-.payment-info {
+.search-input {
     flex: 1;
 }
 
-.payment-beneficiary {
+.search-input label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-buscar {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+}
+
+.btn-buscar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+}
+
+.btn-buscar:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Paso a paso */
+.paso-container {
+    margin-bottom: 20px;
+}
+
+.paso-titulo {
+    font-size: 1.1em;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.paso-footer {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+/* Información del contrato */
+.contrato-info {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.contrato-info h4 {
+    font-size: 1em;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.info-item {
+    display: flex;
+    gap: 10px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.info-value {
+    color: #2c3e50;
+}
+
+/* Cuotas pendientes */
+.cuotas-pendientes {
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.cuota-item {
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cuota-item:last-child {
+    border-bottom: none;
+}
+
+.cuota-item:hover {
+    background-color: #e9ecef;
+}
+
+.cuota-item.selected {
+    background-color: #e3f2fd;
+    border-left: 4px solid #6f42c1;
+}
+
+.cuota-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cuota-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.cuota-label {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.cuota-value {
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 5px;
+}
+
+.cuota-vencimiento {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Formulario de pago */
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.total-field {
+    font-weight: 700;
+    color: #28a745;
     font-size: 1.1em;
 }
 
-.payment-details {
-    color: #6c757d;
-    font-size: 0.9em;
+.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
 }
 
-.payment-meta {
-    text-align: right;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-.payment-large-amount {
-    font-size: 1.4em;
-    font-weight: 700;
-    color: #28a745;
-    margin-bottom: 5px;
+/* Botones */
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+}
+
+.btn-primary:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .payment-card {
+    .form-row {
         flex-direction: column;
-        text-align: center;
+        gap: 15px;
     }
     
-    .payment-meta {
-        text-align: center;
-        margin-top: 15px;
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cuota-grid {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .paso-footer {
+        flex-direction: column;
+    }
+    
+    .paso-footer button {
+        width: 100%;
     }
 }

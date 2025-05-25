@@ -10,73 +10,104 @@ class PagoController {
         $this->pagoModel = new Pago();
         $this->contratoModel = new Contrato();
     }
-
-    // Método específico para la vista - muestra próximos pagos
-    public function obtenerProximosPagosParaVista() {
+    
+    // Método específico para la vista - muestra todos los pagos realizados
+    public function obtenerPagosRealizadosParaVista() {
         try {
-            $pagos = $this->pagoModel->obtenerProximosPagos();
-            
-            // Enriquecer datos para la vista
-            foreach ($pagos as &$pago) {
-                // Obtener el total de cuotas del contrato
-                $contrato = $this->contratoModel->obtenerPorId($pago['idcontrato']);
-                $pago['total_cuotas'] = $contrato['numcuotas'];
-                
-                // Generar fecha programada de pago
-                $fechaInicio = new DateTime($contrato['fechainicio']);
-                $diaPago = $contrato['diapago'];
-                $numCuota = $pago['numcuota'];
-                
-                // Calcular fecha programada de pago
-                $fechaProgramada = clone $fechaInicio;
-                $fechaProgramada->modify('first day of next month'); // Ir al primer día del siguiente mes
-                $fechaProgramada->modify('+' . ($numCuota - 1) . ' months'); // Añadir los meses según la cuota
-                $fechaProgramada->modify('next day ' . ($diaPago - 1) . ' days'); // Ajustar al día de pago
-                
-                $pago['fecha_programada'] = $fechaProgramada->format('d/m/Y');
-            }
-            
+            $pagos = $this->pagoModel->obtenerPagosRealizados();
             return ['exito' => true, 'datos' => $pagos];
         } catch(Exception $e) {
-            throw new Exception("Error al obtener próximos pagos: " . $e->getMessage());
+            throw new Exception("Error al obtener pagos: " . $e->getMessage());
+        }
+    }
+    
+    // Buscar contrato por DNI del beneficiario
+    public function buscarContratoPorDni($dni) {
+        try {
+            if (!$dni) {
+                throw new Exception("DNI requerido");
+            }
+            
+            if (!preg_match('/^\d{8}$/', $dni)) {
+                throw new Exception("Formato de DNI inválido. Debe tener 8 dígitos");
+            }
+            
+            $contratos = $this->contratoModel->obtenerActivosPorDni($dni);
+            
+            if (empty($contratos)) {
+                throw new Exception("No se encontraron contratos activos para el DNI: " . $dni);
+            }
+            
+            // Obtener cuotas pendientes para el primer contrato activo
+            $contrato = $contratos[0];
+            $cuotasPendientes = $this->pagoModel->obtenerCuotasPendientes($contrato['idcontrato']);
+            
+            if (empty($cuotasPendientes)) {
+                throw new Exception("No hay cuotas pendientes para este contrato");
+            }
+            
+            $respuesta = [
+                'contrato' => $contrato,
+                'cuotas' => $cuotasPendientes
+            ];
+            
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => true, 
+                'mensaje' => "Contrato encontrado",
+                'datos' => $respuesta
+            ]);
+            
+            return true;
+            
+        } catch(Exception $e) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'exito' => false,
+                'mensaje' => $e->getMessage()
+            ]);
+            return false;
         }
     }
     
     // Registrar pago desde formulario (para vista)
-    public function registrarDesdeFormulario($datos) {
+    public function registrarPagoDesdeFormulario($datos) {
         try {
             // Validar datos requeridos
-            $this->validarDatosRequeridos($datos, ['idcontrato', 'numcuota', 'monto', 'medio']);
-            
-            // Establecer penalidad (por defecto 0 si no se proporciona)
-            $penalidad = isset($datos['penalidad']) ? $datos['penalidad'] : 0;
-            
-            // Validar datos usando el modelo
-            $errores = $this->pagoModel->validarDatos(
-                $datos['monto'],
-                $penalidad,
-                $datos['medio']
-            );
-            
-            if (!empty($errores)) {
-                throw new Exception(implode(', ', $errores));
+            if (!isset($datos['idpago']) || !is_numeric($datos['idpago'])) {
+                throw new Exception("ID de pago inválido");
             }
             
-            // Verificar que el contrato existe
-            $contrato = $this->contratoModel->obtenerPorId($datos['idcontrato']);
-            if (!$contrato) {
-                throw new Exception("El contrato especificado no existe");
+            // Obtener información del pago
+            $pago = $this->pagoModel->obtenerPorId($datos['idpago']);
+            
+            if (!$pago) {
+                throw new Exception("Pago no encontrado");
             }
             
-            // Verificar que el contrato está activo
-            if ($contrato['estado'] !== 'ACT') {
-                throw new Exception("No se pueden registrar pagos en un contrato finalizado");
+            // Verificar que el pago no esté ya realizado
+            if ($pago['fechapago'] !== null) {
+                throw new Exception("Este pago ya ha sido realizado anteriormente");
             }
             
+            // Validar el medio de pago
+            if (!isset($datos['medio']) || !in_array($datos['medio'], ['EFC', 'DEP'])) {
+                throw new Exception("Medio de pago inválido");
+            }
+            
+            // Calcular penalidad si corresponde
+            $penalidad = 0;
+            $fechaActual = new DateTime();
+            $fechaVencimiento = $this->calcularFechaVencimiento($pago['idcontrato'], $pago['numcuota']);
+            
+            if ($fechaActual > $fechaVencimiento) {
+                // Aplicar penalidad del 10% sobre el valor de la cuota
+                $penalidad = $pago['monto'] * 0.10;
+            }
+            
+            // Registrar pago
             $this->pagoModel->registrarPago(
-                $datos['idcontrato'],
-                $datos['numcuota'],
-                $datos['monto'],
+                $pago['idpago'],
                 $penalidad,
                 $datos['medio']
             );
@@ -88,148 +119,101 @@ class PagoController {
         }
     }
     
-    // Anular pago desde la vista
-    public function anularDesdeVista($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
-                throw new Exception("ID de pago inválido");
-            }
-            
-            // Verificar que el pago existe
-            if (!$this->pagoModel->obtenerPorId($id)) {
-                throw new Exception("Pago no encontrado");
-            }
-            
-            $this->pagoModel->anularPago($id);
-            return ['exito' => true, 'mensaje' => "Pago anulado correctamente"];
-            
-        } catch(Exception $e) {
-            throw new Exception($e->getMessage());
+    // Método auxiliar para calcular la fecha de vencimiento de una cuota
+    private function calcularFechaVencimiento($idContrato, $numCuota) {
+        $contrato = $this->contratoModel->obtenerPorId($idContrato);
+        
+        if (!$contrato) {
+            throw new Exception("Contrato no encontrado");
         }
+        
+        $fechaInicio = new DateTime($contrato['fechainicio']);
+        $fechaInicio->modify('+1 month'); // La primera cuota es el mes siguiente
+        $diaPago = (int)$contrato['diapago'];
+        
+        // Calcular fecha de vencimiento
+        $fechaVencimiento = clone $fechaInicio;
+        $fechaVencimiento->modify('+' . ($numCuota - 1) . ' month');
+        
+        // Ajustar al día de pago
+        $fechaVencimiento->setDate(
+            $fechaVencimiento->format('Y'),
+            $fechaVencimiento->format('m'),
+            min($diaPago, $fechaVencimiento->format('t'))
+        );
+        
+        return $fechaVencimiento;
     }
     
-    // API REST - Listar todos los pagos
-    public function listar() {
+    // API REST - Listar todos los pagos realizados
+    public function listarPagosRealizados() {
         try {
-            $pagos = $this->pagoModel->obtenerTodos();
+            $pagos = $this->pagoModel->obtenerPagosRealizados();
             $this->enviarRespuesta(true, "Pagos obtenidos correctamente", $pagos);
         } catch(Exception $e) {
             $this->enviarRespuesta(false, $e->getMessage());
         }
     }
     
-    // API REST - Obtener pago por ID
-    public function obtener($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
-                throw new Exception("ID de pago inválido");
-            }
-            
-            $pago = $this->pagoModel->obtenerPorId($id);
-            
-            if (!$pago) {
-                throw new Exception("Pago no encontrado");
-            }
-            
-            $this->enviarRespuesta(true, "Pago obtenido correctamente", $pago);
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
-        }
-    }
-    
-    // API REST - Obtener pagos por contrato
-    public function obtenerPorContrato($idContrato) {
+    // API REST - Obtener cuotas pendientes por contrato
+    public function obtenerCuotasPendientes($idContrato) {
         try {
             if (!$idContrato || !is_numeric($idContrato)) {
                 throw new Exception("ID de contrato inválido");
             }
             
-            // Verificar que el contrato existe
-            if (!$this->contratoModel->obtenerPorId($idContrato)) {
-                throw new Exception("Contrato no encontrado");
-            }
-            
-            $pagos = $this->pagoModel->obtenerPorContrato($idContrato);
-            $this->enviarRespuesta(true, "Pagos del contrato obtenidos correctamente", $pagos);
-            
+            $cuotas = $this->pagoModel->obtenerCuotasPendientes($idContrato);
+            $this->enviarRespuesta(true, "Cuotas pendientes obtenidas correctamente", $cuotas);
         } catch(Exception $e) {
             $this->enviarRespuesta(false, $e->getMessage());
         }
     }
     
     // API REST - Registrar pago
-    public function registrar() {
+    public function registrarPago() {
         try {
             $datos = $this->obtenerDatosPost();
             
-            // Validar datos requeridos
-            $this->validarDatosRequeridos($datos, ['idcontrato', 'numcuota', 'monto', 'medio']);
-            
-            // Establecer penalidad (por defecto 0 si no se proporciona)
-            $penalidad = isset($datos['penalidad']) ? $datos['penalidad'] : 0;
-            
-            // Validar datos usando el modelo
-            $errores = $this->pagoModel->validarDatos(
-                $datos['monto'],
-                $penalidad,
-                $datos['medio']
-            );
-            
-            if (!empty($errores)) {
-                throw new Exception(implode(', ', $errores));
-            }
-            
-            // Verificar que el contrato existe
-            $contrato = $this->contratoModel->obtenerPorId($datos['idcontrato']);
-            if (!$contrato) {
-                throw new Exception("El contrato especificado no existe");
-            }
-            
-            // Verificar que el contrato está activo
-            if ($contrato['estado'] !== 'ACT') {
-                throw new Exception("No se pueden registrar pagos en un contrato finalizado");
-            }
-            
-            $this->pagoModel->registrarPago(
-                $datos['idcontrato'],
-                $datos['numcuota'],
-                $datos['monto'],
-                $penalidad,
-                $datos['medio']
-            );
-            
-            $this->enviarRespuesta(true, "Pago registrado correctamente");
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
-        }
-    }
-    
-    // API REST - Anular pago
-    public function anular($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
+            if (!isset($datos['idpago']) || !is_numeric($datos['idpago'])) {
                 throw new Exception("ID de pago inválido");
             }
             
-            // Verificar que el pago existe
-            if (!$this->pagoModel->obtenerPorId($id)) {
+            if (!isset($datos['medio']) || !in_array($datos['medio'], ['EFC', 'DEP'])) {
+                throw new Exception("Medio de pago inválido");
+            }
+            
+            // Obtener información del pago
+            $pago = $this->pagoModel->obtenerPorId($datos['idpago']);
+            
+            if (!$pago) {
                 throw new Exception("Pago no encontrado");
             }
             
-            $this->pagoModel->anularPago($id);
-            $this->enviarRespuesta(true, "Pago anulado correctamente");
+            // Verificar que el pago no esté ya realizado
+            if ($pago['fechapago'] !== null) {
+                throw new Exception("Este pago ya ha sido realizado anteriormente");
+            }
             
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
-        }
-    }
-    
-    // API REST - Obtener próximos pagos
-    public function obtenerProximosPagos() {
-        try {
-            $pagos = $this->pagoModel->obtenerProximosPagos();
-            $this->enviarRespuesta(true, "Próximos pagos obtenidos correctamente", $pagos);
+            // Calcular penalidad si corresponde
+            $penalidad = 0;
+            $fechaActual = new DateTime();
+            $fechaVencimiento = $this->calcularFechaVencimiento($pago['idcontrato'], $pago['numcuota']);
+            
+            if ($fechaActual > $fechaVencimiento) {
+                // Aplicar penalidad del 10% sobre el valor de la cuota
+                $penalidad = $pago['monto'] * 0.10;
+            }
+            
+            // Registrar pago
+            $this->pagoModel->registrarPago(
+                $pago['idpago'],
+                $penalidad,
+                $datos['medio']
+            );
+            
+            $pagoActualizado = $this->pagoModel->obtenerPorId($pago['idpago']);
+            $this->enviarRespuesta(true, "Pago registrado correctamente", $pagoActualizado);
+            
         } catch(Exception $e) {
             $this->enviarRespuesta(false, $e->getMessage());
         }
@@ -248,26 +232,19 @@ class PagoController {
         try {
             switch ($metodo) {
                 case 'GET':
-                    if ($accion === 'contrato' && $id) {
-                        $this->obtenerPorContrato($id);
-                    } elseif ($accion === 'proximos') {
-                        $this->obtenerProximosPagos();
-                    } elseif ($id) {
-                        $this->obtener($id);
+                    if ($accion === 'realizados') {
+                        $this->listarPagosRealizados();
+                    } elseif ($accion === 'pendientes' && $id) {
+                        $this->obtenerCuotasPendientes($id);
+                    } elseif ($accion === 'buscar-contrato' && $id) {
+                        $this->buscarContratoPorDni($id);
                     } else {
-                        $this->listar();
+                        $this->listarPagosRealizados();
                     }
                     break;
                     
                 case 'POST':
-                    $this->registrar();
-                    break;
-                    
-                case 'DELETE':
-                    if (!$id) {
-                        throw new Exception("ID requerido para anular pago");
-                    }
-                    $this->anular($id);
+                    $this->registrarPago();
                     break;
                     
                 default:
@@ -293,16 +270,6 @@ class PagoController {
         }
         
         return $datos;
-    }
-    
-    private function validarDatosRequeridos($datos, $camposRequeridos) {
-        foreach ($camposRequeridos as $campo) {
-            if (!isset($datos[$campo]) || 
-                (is_string($datos[$campo]) && empty(trim($datos[$campo]))) ||
-                (is_numeric($datos[$campo]) && $datos[$campo] === '')) {
-                throw new Exception("El campo '$campo' es requerido");
-            }
-        }
     }
     
     private function enviarRespuesta($exito, $mensaje, $datos = null) {

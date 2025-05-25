@@ -63,15 +63,35 @@
     overflow-y: auto;
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+/* Form layout */
+.form-compact {
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    margin-bottom: 25px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 0;
 }
 
 .form-group-full {
     grid-column: 1 / -1;
+}
+
+/* Corregir alineación del campo Número de Cuotas */
+.form-row .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    white-space: nowrap;
 }
 
 /* Búsqueda de beneficiario */
@@ -271,20 +291,112 @@
     to { transform: rotate(360deg); }
 }
 
+/* Estilos para el modal de cronograma */
+.cronograma-modal .modal-content {
+    max-width: 90%;
+    width: 1000px;
+}
+
+.cronograma-modal .modal-header {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+}
+
+.cronograma-modal .modal-header::before {
+    content: '📅';
+    font-size: 1.5em;
+    margin-right: 10px;
+}
+
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #6f42c1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.cronograma-info {
+    margin-bottom: 25px;
+    display: none;
+}
+
+.cronograma-info h3 {
+    font-size: 1.4em;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f3f4;
+    padding-bottom: 10px;
+}
+
+.cronograma-tabla {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.estado-pagado {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.estado-pendiente {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.estado-vencido {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+/* Botón de acción */
+.btn-action {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(111, 66, 193, 0.3);
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(111, 66, 193, 0.4);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
     }
-
+    
     .summary-grid {
         grid-template-columns: 1fr;
     }
-
+    
     .modal-footer {
         flex-direction: column;
     }
-
+    
+    .modal-footer button {
+        width: 100%;
+    }
+    
     .search-container {
         flex-direction: column;
         gap: 15px;

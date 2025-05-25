@@ -40,7 +40,7 @@ CREATE TABLE pagos
     penalidad	DECIMAL(7,2)	NOT NULL DEFAULT 0 COMMENT '10% del valor de la cuota',
     medio 		ENUM('EFC', 'DEP')NULL COMMENT 'EFC = Efectivo, DEP = Depósito',
     CONSTRAINT fk_idcontrato_pag FOREIGN KEY (idcontrato) REFERENCES contratos (idcontrato),
-    CONsTRAINT uk_numcuota_pag UNIQUE (idcontrato, numcuota)
+    CONSTRAINT uk_numcuota_pag UNIQUE (idcontrato, numcuota)
 )ENGINE = INNODB;
 
 INSERT INTO beneficiarios 
