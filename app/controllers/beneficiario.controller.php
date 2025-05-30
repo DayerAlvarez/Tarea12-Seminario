@@ -1,55 +1,77 @@
 <?php
-require_once 'app/models/Beneficiario.php';
 
+// Incluir la definición del modelo Beneficiario
+require_once __DIR__ . '/../models/Beneficiario.php';
+
+/**
+ * Controlador para gestionar operaciones sobre beneficiarios,
+ * tanto en modo vista para la aplicación web como en API REST.
+ */
 class BeneficiarioController {
+    /**
+     * @var Beneficiario Modelo para interacción con la tabla beneficiarios
+     */
     private $beneficiarioModel;
     
+    /**
+     * Constructor: inicializa el modelo de beneficiario
+     */
     public function __construct() {
         $this->beneficiarioModel = new Beneficiario();
     }
     
-    // Método específico para la vista - muestra todos los beneficiarios
+    // ── MÉTODOS PARA LA VISTA WEB ──
+
+    /**
+     * Obtener todos los beneficiarios para mostrar en la vista
+     * @return array Resultado con clave 'exito' y lista de 'datos'
+     */
     public function obtenerTodosParaVista() {
         try {
             $beneficiarios = $this->beneficiarioModel->obtenerTodos();
             return ['exito' => true, 'datos' => $beneficiarios];
         } catch(Exception $e) {
+            // Lanza excepción con mensaje detallado
             throw new Exception("Error al obtener beneficiarios: " . $e->getMessage());
         }
     }
-    
-    // Crear beneficiario desde formulario (para vista)
+
+    /**
+     * Crear un nuevo beneficiario a partir de datos enviados por formulario
+     * @param array $datos Datos del formulario (apellidos, nombres, dni, telefono, direccion)
+     * @return array Resultado de la operación con mensaje y datos creados
+     * @throws Exception Validaciones fallidas
+     */
     public function crearDesdeFormulario($datos) {
         try {
-            // Validar datos requeridos
+            // Validar campos obligatorios
             $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
-            
-            // Validar formato de DNI
+            // Validar formato de DNI (8 dígitos)
             if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
                 throw new Exception("El DNI debe tener exactamente 8 dígitos");
             }
-            
-            // Validar formato de teléfono
+            // Validar formato de teléfono (9 dígitos)
             if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
                 throw new Exception("El teléfono debe tener exactamente 9 dígitos");
             }
-            
-            // Validar longitud de campos
+            // Validar longitud de cadenas
             if (strlen($datos['apellidos']) > 50) {
                 throw new Exception("Los apellidos no pueden exceder 50 caracteres");
             }
-            
             if (strlen($datos['nombres']) > 50) {
                 throw new Exception("Los nombres no pueden exceder 50 caracteres");
             }
-            
             if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
                 throw new Exception("La dirección no puede exceder 90 caracteres");
             }
-            
+
+            // Normalizar dirección: convertir cadena vacía en null
             $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
-            if (empty($direccion)) $direccion = null;
-            
+            if (empty($direccion)) {
+                $direccion = null;
+            }
+
+            // Crear beneficiario en BD y obtener su ID
             $id = $this->beneficiarioModel->crear(
                 trim($datos['apellidos']),
                 trim($datos['nombres']),
@@ -57,58 +79,63 @@ class BeneficiarioController {
                 trim($datos['telefono']),
                 $direccion
             );
-            
+
+            // Recuperar el registro completo recién creado
             $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
-            return ['exito' => true, 'mensaje' => "Beneficiario creado correctamente", 'datos' => $beneficiario];
-            
+            return [
+                'exito'   => true,
+                'mensaje' => "Beneficiario creado correctamente",
+                'datos'   => $beneficiario
+            ];
         } catch(Exception $e) {
+            // Propagar error con mensaje limpio
             throw new Exception($e->getMessage());
         }
     }
-    
-    // Actualizar beneficiario desde formulario (para vista)
+
+    /**
+     * Actualizar un beneficiario existente mediante formulario
+     * @param array $datos Datos enviados (deben incluir idbeneficiario y campos a modificar)
+     * @return array Resultado con mensaje y datos actualizados
+     * @throws Exception Validación o inexistencia del registro
+     */
     public function actualizarDesdeFormulario($datos) {
         try {
+            // Validar ID
             if (!isset($datos['idbeneficiario']) || !is_numeric($datos['idbeneficiario'])) {
                 throw new Exception("ID de beneficiario inválido");
             }
-            
             $id = $datos['idbeneficiario'];
-            
-            // Verificar que el beneficiario existe
+            // Verificar existencia
             if (!$this->beneficiarioModel->obtenerPorId($id)) {
                 throw new Exception("Beneficiario no encontrado");
             }
-            
-            // Validar datos requeridos
+
+            // Repetir validaciones del formato de datos
             $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
-            
-            // Validar formato de DNI
             if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
                 throw new Exception("El DNI debe tener exactamente 8 dígitos");
             }
-            
-            // Validar formato de teléfono
             if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
                 throw new Exception("El teléfono debe tener exactamente 9 dígitos");
             }
-            
-            // Validar longitud de campos
             if (strlen($datos['apellidos']) > 50) {
                 throw new Exception("Los apellidos no pueden exceder 50 caracteres");
             }
-            
             if (strlen($datos['nombres']) > 50) {
                 throw new Exception("Los nombres no pueden exceder 50 caracteres");
             }
-            
             if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
                 throw new Exception("La dirección no puede exceder 90 caracteres");
             }
-            
+
+            // Normalizar dirección
             $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
-            if (empty($direccion)) $direccion = null;
-            
+            if (empty($direccion)) {
+                $direccion = null;
+            }
+
+            // Ejecutar actualización en BD
             $this->beneficiarioModel->actualizar(
                 $id,
                 trim($datos['apellidos']),
@@ -117,335 +144,292 @@ class BeneficiarioController {
                 trim($datos['telefono']),
                 $direccion
             );
-            
+
+            // Obtener estado actualizado
             $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
-            return ['exito' => true, 'mensaje' => "Beneficiario actualizado correctamente", 'datos' => $beneficiario];
-            
+            return [
+                'exito'   => true,
+                'mensaje' => "Beneficiario actualizado correctamente",
+                'datos'   => $beneficiario
+            ];
         } catch(Exception $e) {
             throw new Exception($e->getMessage());
         }
     }
-    
-    // Eliminar beneficiario (para vista)
+
+    /**
+     * Eliminar un beneficiario por su ID (vista web)
+     * @param int $id Identificador del beneficiario
+     * @return array Resultado con mensaje de eliminación
+     * @throws Exception Si el ID es inválido o no existe
+     */
     public function eliminar($id) {
         try {
             if (!$id || !is_numeric($id)) {
                 throw new Exception("ID de beneficiario inválido");
             }
-            
-            // Verificar que el beneficiario existe
             if (!$this->beneficiarioModel->obtenerPorId($id)) {
                 throw new Exception("Beneficiario no encontrado");
             }
-            
             $this->beneficiarioModel->eliminar($id);
-            return ['exito' => true, 'mensaje' => "Beneficiario eliminado correctamente"];
-            
+            return ['exito' => true, 'mensaje' => "Beneficiario eliminado correctamente"]; 
         } catch(Exception $e) {
             throw new Exception($e->getMessage());
         }
     }
-    
-    // API REST - Listar todos los beneficiarios
+
+    // ── MÉTODOS PARA LA API REST ──
+
+    /**
+     * Listar todos los beneficiarios en formato JSON
+     */
     public function listar() {
-        try {
-            $beneficiarios = $this->beneficiarioModel->obtenerTodos();
-            $this->enviarRespuesta(true, "Beneficiarios obtenidos correctamente", $beneficiarios);
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
-        }
+        $this->enviarRespuesta(
+            true,
+            "Beneficiarios obtenidos correctamente",
+            $this->beneficiarioModel->obtenerTodos()
+        );
     }
-    
-    // API REST - Obtener beneficiario por ID
+
+    /**
+     * Obtener un beneficiario por ID y responder en JSON
+     * @param mixed $id
+     */
     public function obtener($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
-                throw new Exception("ID de beneficiario inválido");
-            }
-            
-            $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
-            
-            if (!$beneficiario) {
-                throw new Exception("Beneficiario no encontrado");
-            }
-            
-            $this->enviarRespuesta(true, "Beneficiario obtenido correctamente", $beneficiario);
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        if (!is_numeric($id)) {
+            $this->enviarRespuesta(false, "ID de beneficiario inválido");
         }
+        $b = $this->beneficiarioModel->obtenerPorId($id);
+        if (!$b) {
+            $this->enviarRespuesta(false, "Beneficiario no encontrado");
+        }
+        $this->enviarRespuesta(true, "Beneficiario obtenido correctamente", $b);
     }
-    
-    // API REST - Crear nuevo beneficiario
+
+    /**
+     * Crear un nuevo beneficiario desde petición POST JSON
+     */
     public function crear() {
-        try {
-            $datos = $this->obtenerDatosPost();
-            
-            // Validar datos requeridos
-            $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
-            
-            // Validar formato de DNI
-            if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
-                throw new Exception("El DNI debe tener exactamente 8 dígitos");
-            }
-            
-            // Validar formato de teléfono
-            if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
-                throw new Exception("El teléfono debe tener exactamente 9 dígitos");
-            }
-            
-            // Validar longitud de campos
-            if (strlen($datos['apellidos']) > 50) {
-                throw new Exception("Los apellidos no pueden exceder 50 caracteres");
-            }
-            
-            if (strlen($datos['nombres']) > 50) {
-                throw new Exception("Los nombres no pueden exceder 50 caracteres");
-            }
-            
-            if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
-                throw new Exception("La dirección no puede exceder 90 caracteres");
-            }
-            
-            $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
-            if (empty($direccion)) $direccion = null;
-            
-            $id = $this->beneficiarioModel->crear(
-                trim($datos['apellidos']),
-                trim($datos['nombres']),
-                trim($datos['dni']),
-                trim($datos['telefono']),
-                $direccion
-            );
-            
-            $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
-            $this->enviarRespuesta(true, "Beneficiario creado correctamente", $beneficiario);
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        $datos = $this->obtenerDatosPost();
+        // Reutiliza las mismas validaciones que para el formulario web
+        $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
+        if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
+            throw new Exception("El DNI debe tener exactamente 8 dígitos");
         }
+        if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
+            throw new Exception("El teléfono debe tener exactamente 9 dígitos");
+        }
+        if (strlen($datos['apellidos']) > 50) {
+            throw new Exception("Los apellidos no pueden exceder 50 caracteres");
+        }
+        if (strlen($datos['nombres']) > 50) {
+            throw new Exception("Los nombres no pueden exceder 50 caracteres");
+        }
+        if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
+            throw new Exception("La dirección no puede exceder 90 caracteres");
+        }
+
+        $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
+        if (empty($direccion)) {
+            $direccion = null;
+        }
+
+        $id = $this->beneficiarioModel->crear(
+            trim($datos['apellidos']),
+            trim($datos['nombres']),
+            trim($datos['dni']),
+            trim($datos['telefono']),
+            $direccion
+        );
+
+        $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
+        $this->enviarRespuesta(true, "Beneficiario creado correctamente", $beneficiario);
     }
-    
-    // API REST - Actualizar beneficiario
+
+    /**
+     * Actualizar beneficiario desde petición PUT JSON
+     * @param mixed $id
+     */
     public function actualizar($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
-                throw new Exception("ID de beneficiario inválido");
-            }
-            
-            $datos = $this->obtenerDatosPost();
-            
-            // Verificar que el beneficiario existe
-            if (!$this->beneficiarioModel->obtenerPorId($id)) {
-                throw new Exception("Beneficiario no encontrado");
-            }
-            
-            // Validar datos requeridos
-            $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
-            
-            // Validar formato de DNI
-            if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
-                throw new Exception("El DNI debe tener exactamente 8 dígitos");
-            }
-            
-            // Validar formato de teléfono
-            if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
-                throw new Exception("El teléfono debe tener exactamente 9 dígitos");
-            }
-            
-            // Validar longitud de campos
-            if (strlen($datos['apellidos']) > 50) {
-                throw new Exception("Los apellidos no pueden exceder 50 caracteres");
-            }
-            
-            if (strlen($datos['nombres']) > 50) {
-                throw new Exception("Los nombres no pueden exceder 50 caracteres");
-            }
-            
-            if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
-                throw new Exception("La dirección no puede exceder 90 caracteres");
-            }
-            
-            $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
-            if (empty($direccion)) $direccion = null;
-            
-            $this->beneficiarioModel->actualizar(
-                $id,
-                trim($datos['apellidos']),
-                trim($datos['nombres']),
-                trim($datos['dni']),
-                trim($datos['telefono']),
-                $direccion
-            );
-            
-            $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
-            $this->enviarRespuesta(true, "Beneficiario actualizado correctamente", $beneficiario);
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        if (!is_numeric($id)) {
+            $this->enviarRespuesta(false, "ID de beneficiario inválido");
         }
+        $datos = $this->obtenerDatosPost();
+        if (!$this->beneficiarioModel->obtenerPorId($id)) {
+            throw new Exception("Beneficiario no encontrado");
+        }
+        // Validaciones similares al método crear()
+        $this->validarDatosRequeridos($datos, ['apellidos', 'nombres', 'dni', 'telefono']);
+        if (!$this->beneficiarioModel->validarDni($datos['dni'])) {
+            throw new Exception("El DNI debe tener exactamente 8 dígitos");
+        }
+        if (!$this->beneficiarioModel->validarTelefono($datos['telefono'])) {
+            throw new Exception("El teléfono debe tener exactamente 9 dígitos");
+        }
+        if (strlen($datos['apellidos']) > 50) {
+            throw new Exception("Los apellidos no pueden exceder 50 caracteres");
+        }
+        if (strlen($datos['nombres']) > 50) {
+            throw new Exception("Los nombres no pueden exceder 50 caracteres");
+        }
+        if (isset($datos['direccion']) && strlen($datos['direccion']) > 90) {
+            throw new Exception("La dirección no puede exceder 90 caracteres");
+        }
+
+        $direccion = isset($datos['direccion']) ? trim($datos['direccion']) : null;
+        if (empty($direccion)) {
+            $direccion = null;
+        }
+
+        $this->beneficiarioModel->actualizar(
+            $id,
+            trim($datos['apellidos']),
+            trim($datos['nombres']),
+            trim($datos['dni']),
+            trim($datos['telefono']),
+            $direccion
+        );
+
+        $beneficiario = $this->beneficiarioModel->obtenerPorId($id);
+        $this->enviarRespuesta(true, "Beneficiario actualizado correctamente", $beneficiario);
     }
-    
-    // API REST - Eliminar beneficiario
+
+    /**
+     * Eliminar beneficiario desde API REST (DELETE)
+     * @param mixed $id
+     */
     public function eliminarRest($id) {
-        try {
-            if (!$id || !is_numeric($id)) {
-                throw new Exception("ID de beneficiario inválido");
-            }
-            
-            // Verificar que el beneficiario existe
-            if (!$this->beneficiarioModel->obtenerPorId($id)) {
-                throw new Exception("Beneficiario no encontrado");
-            }
-            
-            $this->beneficiarioModel->eliminar($id);
-            $this->enviarRespuesta(true, "Beneficiario eliminado correctamente");
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        if (!is_numeric($id)) {
+            $this->enviarRespuesta(false, "ID de beneficiario inválido");
         }
+        $this->beneficiarioModel->eliminar($id);
+        $this->enviarRespuesta(true, "Beneficiario eliminado correctamente");
     }
-    
-    // API REST - Buscar beneficiarios
+
+    /**
+     * Buscar beneficiarios por término de consulta
+     */
     public function buscar() {
-        try {
-            $termino = isset($_GET['q']) ? trim($_GET['q']) : '';
-            
-            if (empty($termino)) {
-                throw new Exception("Debe proporcionar un término de búsqueda");
-            }
-            
-            if (strlen($termino) < 2) {
-                throw new Exception("El término de búsqueda debe tener al menos 2 caracteres");
-            }
-            
-            $beneficiarios = $this->beneficiarioModel->buscar($termino);
-            $this->enviarRespuesta(true, "Búsqueda realizada correctamente", $beneficiarios);
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        $termino = isset($_GET['q']) ? trim($_GET['q']) : '';
+        if (strlen($termino) < 2) {
+            $this->enviarRespuesta(false, "El término de búsqueda debe tener al menos 2 caracteres");
         }
+        $resultados = $this->beneficiarioModel->buscar($termino);
+        $this->enviarRespuesta(true, "Búsqueda realizada correctamente", $resultados);
     }
-    
-    // API REST - Obtener beneficiario por DNI
+
+    /**
+     * Obtener beneficiario por DNI, validando formato
+     * @param string $dni
+     */
     public function obtenerPorDni($dni) {
-        try {
-            if (!$dni) {
-                throw new Exception("DNI requerido");
-            }
-            
-            if (!$this->beneficiarioModel->validarDni($dni)) {
-                throw new Exception("Formato de DNI inválido");
-            }
-            
-            $beneficiario = $this->beneficiarioModel->obtenerPorDni($dni);
-            
-            if (!$beneficiario) {
-                throw new Exception("No se encontró beneficiario con el DNI: " . $dni);
-            }
-            
-            $this->enviarRespuesta(true, "Beneficiario encontrado", $beneficiario);
-            
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        if (!$this->beneficiarioModel->validarDni($dni)) {
+            $this->enviarRespuesta(false, "Formato de DNI inválido");
         }
+        $b = $this->beneficiarioModel->obtenerPorDni($dni);
+        if (!$b) {
+            $this->enviarRespuesta(false, "No se encontró beneficiario con DNI: " . $dni);
+        }
+        $this->enviarRespuesta(true, "Beneficiario encontrado", $b);
     }
-    
-    // Procesar las solicitudes HTTP para API REST
+
+    // ── ROUTER: Procesa la solicitud entrante según método HTTP y parámetros ──
     public function procesarSolicitud() {
+        header('Content-Type: application/json; charset=utf-8');
+
         $metodo = $_SERVER['REQUEST_METHOD'];
-        $uri = $_SERVER['REQUEST_URI'];
-        
-        // Extraer parámetros de la URL
-        $partes = explode('/', trim(parse_url($uri, PHP_URL_PATH), '/'));
-        $accion = isset($partes[2]) ? $partes[2] : '';
-        $id = isset($partes[3]) ? $partes[3] : null;
-        
+        $action = $_GET['action'] ?? null;
+        $id     = $_GET['id']     ?? null;
+
         try {
             switch ($metodo) {
                 case 'GET':
-                    if ($accion === 'buscar') {
+                    if ($action === 'buscar') {
                         $this->buscar();
-                    } elseif ($accion === 'dni' && $id) {
+                    } elseif ($action === 'dni' && $id) {
                         $this->obtenerPorDni($id);
-                    } elseif ($id) {
+                    } elseif ($action === 'obtener' && $id) {
                         $this->obtener($id);
                     } else {
                         $this->listar();
                     }
                     break;
-                    
+
                 case 'POST':
                     $this->crear();
                     break;
-                    
+
                 case 'PUT':
-                    if (!$id) {
-                        throw new Exception("ID requerido para actualizar");
-                    }
+                    if (!$id) throw new Exception("ID requerido para PUT");
                     $this->actualizar($id);
                     break;
-                    
+
                 case 'DELETE':
-                    if (!$id) {
-                        throw new Exception("ID requerido para eliminar");
-                    }
+                    if (!$id) throw new Exception("ID requerido para DELETE");
                     $this->eliminarRest($id);
                     break;
-                    
+
                 default:
-                    throw new Exception("Método HTTP no soportado");
+                    throw new Exception("Método HTTP no soportado: $metodo");
             }
-        } catch(Exception $e) {
-            $this->enviarRespuesta(false, $e->getMessage());
+        } catch (Exception $e) {
+            // Responder error en JSON
+            echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
         }
+        exit;
     }
-    
-    // Métodos auxiliares
+
+    // ── FUNCIONES AUXILIARES ──
+
+    /**
+     * Leer y decodificar datos JSON de la petición HTTP
+     * @return array Datos decodificados o $_POST
+     * @throws Exception Si no se reciben datos válidos
+     */
     private function obtenerDatosPost() {
         $input = file_get_contents('php://input');
         $datos = json_decode($input, true);
-        
         if (json_last_error() !== JSON_ERROR_NONE) {
-            // Si no es JSON, intentar obtener de $_POST
             $datos = $_POST;
         }
-        
         if (empty($datos)) {
             throw new Exception("No se recibieron datos");
         }
-        
         return $datos;
     }
-    
-    private function validarDatosRequeridos($datos, $camposRequeridos) {
-        foreach ($camposRequeridos as $campo) {
-            if (!isset($datos[$campo]) || empty(trim($datos[$campo]))) {
+
+    /**
+     * Validar campos obligatorios en un arreglo de datos
+     * @param array $datos
+     * @param array $campos Lista de nombres de campos requeridos
+     * @throws Exception Si falta alguno
+     */
+    private function validarDatosRequeridos($datos, $campos) {
+        foreach ($campos as $campo) {
+            if (!isset($datos[$campo]) || trim($datos[$campo]) === '') {
                 throw new Exception("El campo '$campo' es requerido");
             }
         }
     }
-    
+
+    /**
+     * Enviar respuesta JSON estándar al cliente
+     * @param bool $exito Indica éxito o fallo
+     * @param string $mensaje Mensaje descriptivo
+     * @param mixed|null $datos Datos a incluir (opcional)
+     */
     private function enviarRespuesta($exito, $mensaje, $datos = null) {
-        header('Content-Type: application/json; charset=utf-8');
-        
-        $respuesta = [
-            'exito' => $exito,
-            'mensaje' => $mensaje
-        ];
-        
+        $resp = ['exito' => $exito, 'mensaje' => $mensaje];
         if ($datos !== null) {
-            $respuesta['datos'] = $datos;
+            $resp['datos'] = $datos;
         }
-        
-        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+        echo json_encode($resp, JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
 
-// Uso del controlador para API REST
-if (basename($_SERVER['PHP_SELF']) === 'beneficiario.controller.php' && 
-    strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
+// Si se invoca este archivo directamente, crear instancia y procesar solicitud
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     $controller = new BeneficiarioController();
     $controller->procesarSolicitud();
 }
-?>
